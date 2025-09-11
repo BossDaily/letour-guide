@@ -1,4 +1,4 @@
-# Astro with Tailwind
+# Letour-guide
 
 ```sh
 npm create astro@latest -- --template with-tailwindcss
