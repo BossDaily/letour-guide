@@ -1,4 +1,4 @@
-# Astro Starter Kit: Basics
+# Letour Guide App
 
 ```sh
 npm create astro@latest -- --template basics
