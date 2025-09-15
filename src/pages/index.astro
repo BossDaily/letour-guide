@@ -1,23 +1,26 @@
 ---
 //main imports
-import MainLayout from "../layouts/main.astro";
+import Layout from "../layouts/main.astro";
 import "../styles/global.css";
 // Component Imports
 import { Button } from "@/components/ui/button";
 import { navigate } from "astro:transitions/client";
 //import Button from "../components/Button.astro";
 import content from "../layouts/main.astro";
+
 // Full Astro Component Syntax:
 // https://docs.astro.build/basics/astro-components/
 ---
 
-<MainLayout content.title="LeTour">
+<Layout title="LeTour">
 	<div class="grid place-items-center h-screen content-center">
 		<Button onClick={() => navigate('/listen')}>Go to Listen</Button>
 		<a href="/listen" class="p-4 underline">Go to Listen</a>
+		<a href="/broadcast" class="p-4 underline">Go to Broadcast</a>
 	</div>
-</MainLayout>
+</Layout>
 
+<!-- Original html without using the main layout -->
 <!-- <html lang="en">
 	<head>
 		<meta charset="utf-8" />
