@@ -9,8 +9,17 @@ import { navigate } from "astro:transitions/client";
 
 <Layout title="LeTour Listen">
 	<div class="grid place-items-center h-screen content-center">
+		<!-- dropdown menu for channel -->
+		<div class="mb-4">
+			<label for="channel" class="mr-2">Select Guide:</label>
+			<select id="channel" name="channel" class="bg-blue-950 p-2 rounded">
+				<option value="1">one</option>
+				<option value="2">two</option>
+				<option value="3">three</option>
+			</select>
+		</div>
 		<a href="/" class="p-4 underline">
-			<Button variant="yellow">Go home</Button>
+			<Button variant="letu">Go home</Button>
 		</a>
 		<a href="/listen" class="p-4 underline">Listen to a tour...</a>
 	</div>
