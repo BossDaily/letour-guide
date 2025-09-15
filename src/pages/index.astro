@@ -4,20 +4,10 @@ import Layout from "../layouts/main.astro";
 import "../styles/global.css";
 // Component Imports
 import { Button } from "@/components/ui/button";
-import { DropdownMenu } from "@/components/ui/dropdown-menu";
 import { navigate } from "astro:transitions/client";
 //import Button from "../components/Button.astro";
 //variables
-const dropdownNavigationMenuItems = [
-    { name: 'Home', url: '/' },
-    {
-        name: 'Sites',
-        children: [
-            { name: 'Listen', url: '/listen' },
-            { name: 'Broadcast', url: '/broadcast' }
-        ]
-    },
-]
+
 
 // Full Astro Component Syntax:
 // https://docs.astro.build/basics/astro-components/
@@ -25,12 +15,12 @@ const dropdownNavigationMenuItems = [
 
 <Layout title="LeTour">
 	<div class="grid place-items-center h-screen content-center">
-		<Button onClick={() => navigate('/listen')}>Does nothing</Button>
-		<DropdownMenu
-			items={dropdownNavigationMenuItems}
-		/>
-		<a href="/listen" class="p-4 underline">Go to Listen</a>
-		<a href="/broadcast" class="p-4 underline">Go to Broadcast</a>
+		<a href="/listen" class="p-4 underline">
+			<Button>Go to Listen</Button>
+		</a>
+		<a href="/broadcast" class="p-4 underline">
+			<Button>Go to Broadcast</Button>
+		</a>
 	</div>
 </Layout>
 
