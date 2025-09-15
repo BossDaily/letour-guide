@@ -1,6 +1,6 @@
 ---
 //main imports
-import Layout from "../layouts/main.astro";
+import Layout from "../layouts/mainLayout.astro";
 import "../styles/global.css";
 // Component Imports
 import { Button } from "@/components/ui/button";
@@ -10,7 +10,7 @@ import { navigate } from "astro:transitions/client";
 <Layout title="LeTour Speak">
 	<div class="grid place-items-center h-screen content-center">
 		<a href="/" class="p-4 underline">
-			<Button>Go home</Button>
+			<Button variant="yellow">Go home</Button>
 		</a>
 		<a href="/broadcast" class="p-4 underline">Broadcasting (not yet)</a>
 	</div>

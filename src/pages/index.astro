@@ -1,13 +1,12 @@
 ---
 //main imports
-import Layout from "../layouts/main.astro";
+import Layout from "../layouts/mainLayout.astro";
 import "../styles/global.css";
 // Component Imports
 import { Button } from "@/components/ui/button";
 import { navigate } from "astro:transitions/client";
 //import Button from "../components/Button.astro";
 //variables
-
 
 // Full Astro Component Syntax:
 // https://docs.astro.build/basics/astro-components/
@@ -16,10 +15,13 @@ import { navigate } from "astro:transitions/client";
 <Layout title="LeTour">
 	<div class="grid place-items-center h-screen content-center">
 		<a href="/listen" class="p-4 underline">
-			<Button>Go to Listen</Button>
+			<Button variant="yellow">Go to Listen</Button>
 		</a>
 		<a href="/broadcast" class="p-4 underline">
-			<Button>Go to Broadcast</Button>
+			<Button variant="yellow">Go to Broadcast</Button>
+		</a>
+		<a href="https://linkedin.com/in/rutledgedixon" class="p-4 underline">
+			<Button variant="yellow">Can we access the web?</Button>
 		</a>
 	</div>
 </Layout>
