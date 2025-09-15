@@ -6,7 +6,6 @@ import "../styles/global.css";
 import { Button } from "@/components/ui/button";
 import { navigate } from "astro:transitions/client";
 //import Button from "../components/Button.astro";
-import content from "../layouts/main.astro";
 
 // Full Astro Component Syntax:
 // https://docs.astro.build/basics/astro-components/
@@ -14,7 +13,7 @@ import content from "../layouts/main.astro";
 
 <Layout title="LeTour">
 	<div class="grid place-items-center h-screen content-center">
-		<Button onClick={() => navigate('/listen')}>Go to Listen</Button>
+		<Button onClick={() => navigate('/listen')}>Does nothing</Button>
 		<a href="/listen" class="p-4 underline">Go to Listen</a>
 		<a href="/broadcast" class="p-4 underline">Go to Broadcast</a>
 	</div>
