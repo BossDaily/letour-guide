@@ -1,10 +1,14 @@
 const WebSocket = require('ws');
-const wss = new WebSocket.Server({ port: 3001 });
+
+//port
+const port = 3001;
+const wss = new WebSocket.Server({ port: port });
 
 const channels = {}; // { channelId: Set of sockets }
 
 wss.on('connection', (ws) => {
   ws.on('message', (msg) => {
+    console.log('received audio');
     // Expect JSON: { type, channel, data }
     let parsed;
     try { parsed = JSON.parse(msg); } catch { return; }

@@ -1,10 +1,11 @@
 ---
 //main imports
-import Layout from "../layouts/mainLayout.astro";
+import Layout from "../layouts/listenLayout.astro";
 import "../styles/global.css";
 // Component Imports
 import { Button } from "@/components/ui/button";
 import { navigate } from "astro:transitions/client";
+import BroadcastSoundbyte from "@/components/BroadcastSoundbyte";
 ---
 
 <Layout title="LeTour Speak">
@@ -12,6 +13,6 @@ import { navigate } from "astro:transitions/client";
 		<a href="/" class="p-4 underline">
 			<Button variant="letu">Go home</Button>
 		</a>
-		<a href="/broadcast" class="p-4 underline">Broadcasting (not yet)</a>
+		<BroadcastSoundbyte client:only="react"/>
 	</div>
 </Layout>

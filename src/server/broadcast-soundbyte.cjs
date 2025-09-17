@@ -4,7 +4,7 @@ const wav = require('wav-decoder');
 
 const WS_URL = 'ws://localhost:3001';
 const CHANNEL = '1';
-const FILE = './src/server/lego-yoda-death-sound-effect.wav';
+const FILE = '/sounds/lego-yoda-death-sound-effect.wav';
 
 // Read and decode the WAV file
 async function streamSoundbyte() {
