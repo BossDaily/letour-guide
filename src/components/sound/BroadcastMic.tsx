@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 
-//THIS DOES NOT WORK YET, BUT IS WHERE WE WILL TAKE INPUT FROM A MIC
+// MIC WORKS, BUT NOT WELL
 
 // This is the url of the server
 const WS_URL = "ws://localhost:3001"; // Update if your server runs elsewhere
@@ -41,9 +41,11 @@ export default function BroadcastMic() {
       // Start mic
       navigator.mediaDevices.getUserMedia({ audio: true }).then(async stream => {
         setMicrophoneStream(stream);
+        //get audio context using the mic-processor driver
         const audioCtx = audioCtxRef.current!;
         await audioCtx.audioWorklet.addModule('/drivers/mic-processor.js');
         const source = audioCtx.createMediaStreamSource(stream);
+        //create a mic that we can listen to
         const micNode = new AudioWorkletNode(audioCtx, 'mic-processor');
         micNode.port.onmessage = (event) => {
           const inputDataArray = Array.from(event.data);
