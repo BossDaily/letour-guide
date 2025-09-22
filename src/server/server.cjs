@@ -20,10 +20,14 @@ wss.on('connection', (ws) => {
       channels[channel].add(ws);
     }
     if (type === 'audio' && ws.channel) {
-      // Relay audio to all listeners except sender
+      // Relay audio to all listeners except sender, include all properties
       channels[ws.channel]?.forEach(client => {
         if (client !== ws && client.readyState === WebSocket.OPEN) {
-          client.send(JSON.stringify({ type: 'audio', data }));
+          client.send(JSON.stringify({
+            type: 'audio',
+            data,
+            sampleRate: parsed.sampleRate // forward sampleRate
+          }));
         }
       });
     }

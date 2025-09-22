@@ -8,6 +8,7 @@ export default function ListenAudio() {
   const wsRef = useRef<WebSocket | null>(null);
   const audioCtxRef = useRef<AudioContext | null>(null);
 
+  //useEffect to set up websocket connection when channel changes
   useEffect(() => {
     // Clean up previous connection
     if (wsRef.current) {
@@ -25,18 +26,40 @@ export default function ListenAudio() {
 
     ws.onmessage = (msg) => {
       try {
-        const { type, data } = JSON.parse(msg.data);
+        const { type, data, sampleRate } = JSON.parse(msg.data);
         if (type === "audio" && Array.isArray(data)) {
           const ctx = audioCtxRef.current!;
-          const buffer = ctx.createBuffer(1, data.length, ctx.sampleRate);
-          buffer.getChannelData(0).set(data);
-          const source = ctx.createBufferSource();
-          source.buffer = buffer;
-          source.connect(ctx.destination);
-          source.start();
-        }
-      } catch {}
-    };
+          let buffer;
+          if (sampleRate && sampleRate !== ctx.sampleRate) {
+            // Resample if needed
+            buffer = ctx.createBuffer(1, data.length, sampleRate);
+            buffer.getChannelData(0).set(data);
+            // Use OfflineAudioContext to resample
+            const offlineCtx = new OfflineAudioContext(1, data.length * ctx.sampleRate / sampleRate, ctx.sampleRate);
+            const source = offlineCtx.createBufferSource();
+            source.buffer = buffer;
+            source.connect(offlineCtx.destination);
+            source.start();
+            offlineCtx.startRendering().then(renderedBuffer => {
+              const playSource = ctx.createBufferSource();
+              playSource.buffer = renderedBuffer;
+              playSource.connect(ctx.destination);
+              playSource.start();
+            });
+          } else {
+            // No resampling needed
+            buffer = ctx.createBuffer(1, data.length, ctx.sampleRate);
+            buffer.getChannelData(0).set(data);
+            const source = ctx.createBufferSource();
+            source.buffer = buffer;
+            source.connect(ctx.destination);
+            source.start();
+          }
+        } 
+      } catch (error) {
+      console.error("Error processing audio data:", error);
+    }
+  };
 
     return () => {
       ws.close();

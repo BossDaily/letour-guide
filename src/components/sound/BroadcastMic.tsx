@@ -49,7 +49,12 @@ export default function BroadcastMic() {
           const inputDataArray = Array.from(event.data);
           // Send audio data to server
           if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
-            wsRef.current.send(JSON.stringify({ type: 'audio', channel: channel, data: inputDataArray }));
+            wsRef.current.send(JSON.stringify({ 
+              type: 'audio', 
+              channel: channel, 
+              data: inputDataArray ,
+              sampleRate: audioCtxRef.current!.sampleRate
+            }));
           }
         };
         source.connect(micNode).connect(audioCtx.destination);
