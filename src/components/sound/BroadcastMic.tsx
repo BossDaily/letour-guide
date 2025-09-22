@@ -1,0 +1,95 @@
+import { useEffect, useRef, useState } from "react";
+import { Button } from "@/components/ui/button";
+
+//THIS DOES NOT WORK YET, BUT IS WHERE WE WILL TAKE INPUT FROM A MIC
+
+// This is the url of the server
+const WS_URL = "ws://localhost:3001"; // Update if your server runs elsewhere
+
+export default function BroadcastMic() {
+  const [channel, setChannel] = useState("1");
+  const [microphoneStream, setMicrophoneStream] = useState<MediaStream | null>(null);
+  const [micEnable, setMicEnable] = useState(false);
+  const wsRef = useRef<WebSocket | null>(null);
+  const audioCtxRef = useRef<AudioContext | null>(null);
+
+  //useEffect to set up websocket connection when channel changes
+  useEffect(() => {
+    // Clean up previous connection and set up new one when channel is changed
+    if (wsRef.current) {
+      wsRef.current.close();
+    }
+    if (!audioCtxRef.current) {
+      audioCtxRef.current = new (window.AudioContext || (window as any).webkitAudioContext)();
+    }
+    const ws = new WebSocket(WS_URL);
+    wsRef.current = ws;
+
+    ws.onopen = () => {
+      ws.send(JSON.stringify({ type: "join", channel }));
+    };
+    ws.onmessage = (msg) => { /* no-op */ };
+
+    return () => {
+      ws.close();
+    };
+  }, [channel]);
+
+  //useEffect to start/stop mic when micEnable changes
+  useEffect(() => {
+    if (micEnable) {
+      // Start mic
+      navigator.mediaDevices.getUserMedia({ audio: true }).then(async stream => {
+        setMicrophoneStream(stream);
+        const audioCtx = audioCtxRef.current!;
+        await audioCtx.audioWorklet.addModule('/drivers/mic-processor.js');
+        const source = audioCtx.createMediaStreamSource(stream);
+        const micNode = new AudioWorkletNode(audioCtx, 'mic-processor');
+        micNode.port.onmessage = (event) => {
+          const inputDataArray = Array.from(event.data);
+          // Send audio data to server
+          if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
+            wsRef.current.send(JSON.stringify({ type: 'audio', channel: channel, data: inputDataArray }));
+          }
+        };
+        source.connect(micNode).connect(audioCtx.destination);
+      }).catch(err => {
+        console.error("Error accessing microphone:", err);
+        setMicEnable(false);
+      });
+    } else {
+      // Stop mic
+      if (microphoneStream) {
+        microphoneStream.getTracks().forEach(track => track.stop());
+      }
+    } //end if micEnable
+  }, [micEnable]);
+
+  return (
+    <div>
+      <div className="mb-4">
+        <label htmlFor="channel" className="mr-2">Broadcast to:</label>
+        <select
+          id="channel"
+          name="channel"
+          className="bg-blue-950 p-2 rounded"
+          value={channel}
+          onChange={e => setChannel(e.target.value)}
+        >
+          <option value="1">one</option>
+          <option value="2">two</option>
+          <option value="3">three</option>
+        </select>
+      </div>
+      <div className="mb-4">
+        <Button variant="letu" onClick={async () => {
+          setMicEnable(!micEnable);
+        }}>
+          {micEnable ? "Stop Mic" : "Start Mic"}
+        </Button>
+
+      </div>
+      {/* <div className="text-white mb-2">Listening on channel {channel}</div> */}
+    </div>
+  );
+}

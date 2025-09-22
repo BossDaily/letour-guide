@@ -5,7 +5,8 @@ import "../styles/global.css";
 // Component Imports
 import { Button } from "@/components/ui/button";
 import { navigate } from "astro:transitions/client";
-import BroadcastSoundbyte from "@/components/BroadcastSoundbyte";
+import BroadcastSoundbyte from "@/components/sound/BroadcastSoundbyte";
+import BroadcastMic from "@/components/sound/BroadcastMic";
 ---
 
 <Layout title="LeTour Speak">
@@ -14,5 +15,6 @@ import BroadcastSoundbyte from "@/components/BroadcastSoundbyte";
 			<Button variant="letu">Go home</Button>
 		</a>
 		<BroadcastSoundbyte client:only="react"/>
+		<BroadcastMic client:only="react"/>
 	</div>
 </Layout>
