@@ -73,9 +73,9 @@ export default function BroadcastSoundbyte() {
             const response = await fetch(FILE);
             const arrayBuffer = await response.arrayBuffer();
             const audioBuffer = await audioCtxRef.current!.decodeAudioData(arrayBuffer);
-            //const samples = audioBuffer.getChannelData(0);
-            //wsRef.current.send(JSON.stringify({ type: 'audio', channel: channel, data: Array.from(samples) }));
-            sendAudioInChunks(wsRef.current, channel, audioBuffer);
+            const samples = audioBuffer.getChannelData(0);
+            wsRef.current.send(JSON.stringify({ type: 'audio', channel: channel, data: Array.from(samples) }));
+            //sendAudioInChunks(wsRef.current, channel, audioBuffer);
           }
         }}>
           Play!
