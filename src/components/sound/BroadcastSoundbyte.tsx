@@ -4,9 +4,10 @@ import { Button } from "@/components/ui/button";
 // This is the url of the server
 const WS_URL = "ws://localhost:3001"; // Update if your server runs elsewhere
 // This is the location of the soundbyte
-const FILE = '/sounds/lego-yoda-death-sound-effect.wav';
+const FILE = 'sounds/lego-yoda-death-sound-effect.wav';
 
-export default function BroadcastSoundbyte() {
+// Accept base url as a prop (default to '/')
+export default function BroadcastSoundbyte({ base = "/" }: { base?: string }) {
   const [channel, setChannel] = useState("1");
   const wsRef = useRef<WebSocket | null>(null);
   const audioCtxRef = useRef<AudioContext | null>(null);
@@ -69,8 +70,10 @@ export default function BroadcastSoundbyte() {
       <div>
         <Button variant="letu" onClick={async () => {
           if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
-            // load and send the soundbyte (this should be changed to be sent in chunks)
-            const response = await fetch(FILE);
+            // Ensure base ends with a slash
+            let basePath = base;
+            if (!basePath.endsWith("/")) basePath += "/";
+            const response = await fetch(basePath + FILE);
             const arrayBuffer = await response.arrayBuffer();
             const audioBuffer = await audioCtxRef.current!.decodeAudioData(arrayBuffer);
             const samples = audioBuffer.getChannelData(0);

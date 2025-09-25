@@ -2,11 +2,10 @@
 //main imports
 import Layout from "../layouts/mainLayout.astro";
 import "../styles/global.css";
+import defineConfig from "astro.config.mjs"
 // Component Imports
 import { Button } from "@/components/ui/button";
 import { navigate } from "astro:transitions/client";
-//import Button from "../components/Button.astro";
-//variables
 
 // Full Astro Component Syntax:
 // https://docs.astro.build/basics/astro-components/
@@ -14,14 +13,13 @@ import { navigate } from "astro:transitions/client";
 
 <Layout title="LeTour Home">
 	<div class="grid place-items-center h-screen content-center">
-		<Button variant="letu" onClick={() => navigate('/listen')}>Go to Listen</Button>
-		<Button variant="letu" onClick={() => navigate('/broadcast')}>Go to Broadcast</Button>
-		<!-- <a href="/listen" class="p-4 underline">
+		<!-- <NavigateButton client:only="react" page="listen" text="Go to listen" /> -->
+		<a href={defineConfig.base + "listen"} class="p-4 underline">
 			<Button variant="letu">Go to Listen</Button>
 		</a>
-		<a href="/broadcast" class="p-4 underline">
+		<a href={defineConfig.base + "broadcast"} class="p-4 underline">
 			<Button variant="letu">Go to Broadcast</Button>
-		</a> -->
+		</a>
 		<a href="https://linkedin.com/in/rutledgedixon" class="p-4 underline">
 			<Button variant="letu">Can we access the web?</Button>
 		</a>
