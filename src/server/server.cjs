@@ -21,15 +21,17 @@ wss.on('connection', (ws) => {
     }
     if (type === 'audio' && ws.channel) {
       // Relay audio to all listeners except sender, include all properties
-      channels[ws.channel]?.forEach(client => {
-        if (client !== ws && client.readyState === WebSocket.OPEN) {
-          client.send(JSON.stringify({
-            type: 'audio',
-            data,
-            sampleRate: parsed.sampleRate // forward sampleRate
-          }));
-        }
-      });
+      if (channels[ws.channel]) {
+        channels[ws.channel].forEach(client => {
+          if (client !== ws && client.readyState === WebSocket.OPEN) {
+            client.send(JSON.stringify({
+              type: 'audio',
+              data,
+              sampleRate: parsed.sampleRate // forward sampleRate
+            }));
+          }
+        });
+      }
     }
   });
 
