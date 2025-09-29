@@ -36,6 +36,10 @@ wss.on('connection', (ws) => {
   });
 
   ws.on('close', () => {
-    if (ws.channel) channels[ws.channel]?.delete(ws);
+    if (ws.channel) {
+      if (channels[ws.channel]) {
+        channels[ws.channel].delete(ws);
+      }
+    }
   });
 });
