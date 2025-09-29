@@ -5,6 +5,8 @@ import { Button } from "@/components/ui/button";
 
 // This is the url of the server
 const WS_URL = "ws://localhost:3001"; // Update if your server runs elsewhere
+// This is the base url of the page
+const BASE_URL = import.meta.env.BASE_URL || "/";
 
 export default function BroadcastMic() {
   const [channel, setChannel] = useState("1");
@@ -43,7 +45,7 @@ export default function BroadcastMic() {
         setMicrophoneStream(stream);
         //get audio context using the mic-processor driver
         const audioCtx = audioCtxRef.current!;
-        await audioCtx.audioWorklet.addModule('/drivers/mic-processor.js');
+        await audioCtx.audioWorklet.addModule(BASE_URL + 'drivers/mic-processor.js');
         const source = audioCtx.createMediaStreamSource(stream);
         //create a mic that we can listen to
         const micNode = new AudioWorkletNode(audioCtx, 'mic-processor');
