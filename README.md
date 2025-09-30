@@ -1,5 +1,9 @@
 # Letour-guide
 
+Do `npm run server` to start up the websocket server
+
+
+
 ```sh
 npm create astro@latest -- --template with-tailwindcss
 ```
