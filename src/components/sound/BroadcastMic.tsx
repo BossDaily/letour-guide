@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 // This is the base url of the page
 const BASE_URL = import.meta.env.BASE_URL || "/";
 // This is the url of the server
-const WS_URL = `${location.origin}${BASE_URL}/api/server`; // Update if your server runs elsewhere
+const WS_URL = `${location.origin}${BASE_URL.replace('client', 'server')}/api/server`; // Update if your server runs elsewhere
 
 
 export default function BroadcastMic() {
