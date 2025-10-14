@@ -18,7 +18,7 @@ export const GET = (ctx) => {
 
   // Handle incoming messages
   socket.onmessage = (event) => {
-    console.log('received message');
+    console.log('\x1b[36m Web Server: received message \x1b[0m');
     
     let parsed;
     try {
@@ -33,11 +33,11 @@ export const GET = (ctx) => {
       socket.channel = channel;
       channels[channel] = channels[channel] || new Set();
       channels[channel].add(socket);
-      console.log(`Client joined channel: ${channel}`);
+      console.log(`\x1b[32m Client joined channel: ${channel} \x1b[0m`);
     }
 
     if (type === 'audio' && socket.channel) {
-      console.log('received audio');
+      console.log('\x1b[34m Web Server: received audio \x1b[0m');
       // Relay audio to all listeners except sender, include all properties
       if (channels[socket.channel]) {
         channels[socket.channel].forEach(client => {
@@ -55,11 +55,11 @@ export const GET = (ctx) => {
 
   // Handle connection close
   socket.onclose = () => {
-    console.log('Client disconnected');
+    console.log('\x1b[33m Client disconnected \x1b[0m');
     if (socket.channel) {
       if (channels[socket.channel]) {
         channels[socket.channel].delete(socket);
-        console.log(`Client left channel: ${socket.channel}`);
+        console.log(`\x1b[93m Client left channel: ${socket.channel} \x1b[0m`);
       }
     }
   };
