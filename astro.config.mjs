@@ -2,6 +2,7 @@
 
 import { defineConfig } from 'astro/config';
 import react from '@astrojs/react';
+import nodeWebSocket from "astro-node-websocket"
 
 const base = '/~LeTour/v0.04/dist/' // make this the directory where all the pages go
 
@@ -14,6 +15,7 @@ export default defineConfig({
       postcss: './postcss.config.js',
     },
   },
+  adapter: nodeWebSocket({ mode: "standalone" }), 
 
   integrations: [react()],
 });
