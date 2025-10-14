@@ -5,7 +5,14 @@ export interface NavigationItem {
   label: string;
   href: string;
   external?: boolean;
-  variant?: "default" | "letu" | "destructive" | "outline" | "secondary" | "ghost" | "link";
+  variant?:
+    | "default"
+    | "letu"
+    | "destructive"
+    | "outline"
+    | "secondary"
+    | "ghost"
+    | "link";
 }
 
 interface Props {
@@ -17,27 +24,30 @@ interface Props {
   sticky?: boolean;
 }
 
-const { 
-  items, 
-  logo, 
-  logoText = "RK", 
-  logoHref = "/", 
-  className = "", 
-  sticky = true 
-} = Astro.props;
-
 const base = import.meta.env.BASE_URL || "/";
+
+const {
+  items,
+  logo = base + "/images/letu-symbol.png",
+  logoText,
+  logoHref = "/",
+  className = "",
+  sticky = true,
+} = Astro.props;
 ---
 
-<nav class={`bg-white shadow-lg border-b border-gray-200 ${sticky ? 'sticky top-0 z-50' : ''} ${className}`}>
+<nav
+  class={`bg-white shadow-lg border-b border-gray-200 ${sticky ? "sticky top-0 z-50" : ""} ${className}`}
+>
   <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
     <div class="flex justify-between items-center h-16">
       <!-- Logo/Brand Section -->
       <div class="flex items-center">
-        <a href={base + logoHref.replace('/', '')} class="flex items-center space-x-2 hover:opacity-80 transition-opacity">
-          {logo && (
-            <img src={logo} alt="Logo" class="h-8 w-8" />
-          )}
+        <a
+          href={base + logoHref.replace("/", "")}
+          class="flex items-center space-x-2 hover:opacity-80 transition-opacity"
+        >
+          {logo && <img src={logo} alt="Logo" class="h-8 w-8" />}
           <span class="text-xl font-bold text-gray-900">{logoText}</span>
         </a>
       </div>
@@ -45,35 +55,61 @@ const base = import.meta.env.BASE_URL || "/";
       <!-- Desktop Navigation -->
       <div class="hidden md:block">
         <div class="ml-10 flex items-baseline space-x-4">
-          {items.map((item) => (
-            <a 
-              href={item.external ? item.href : base + item.href.replace('/', '')}
-              class="px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-100 transition-colors"
-              target={item.external ? "_blank" : undefined}
-              rel={item.external ? "noopener noreferrer" : undefined}
-            >
-              {item.label}
-            </a>
-          ))}
+          {
+            items.map((item) => (
+              <a
+                href={
+                  item.external ? item.href : base + item.href.replace("/", "")
+                }
+                class="px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-100 transition-colors"
+                target={item.external ? "_blank" : undefined}
+                rel={item.external ? "noopener noreferrer" : undefined}
+              >
+                {item.label}
+              </a>
+            ))
+          }
         </div>
       </div>
 
       <!-- Mobile menu button -->
       <div class="md:hidden">
-        <button 
-          type="button" 
+        <button
+          type="button"
           class="mobile-menu-button bg-gray-100 inline-flex items-center justify-center p-2 rounded-md text-gray-400 hover:text-gray-500 hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-indigo-500"
-          aria-controls="mobile-menu" 
+          aria-controls="mobile-menu"
           aria-expanded="false"
         >
           <span class="sr-only">Open main menu</span>
           <!-- Menu icon -->
-          <svg class="block h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+          <svg
+            class="block h-6 w-6"
+            xmlns="http://www.w3.org/2000/svg"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+            aria-hidden="true"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M4 6h16M4 12h16M4 18h16"></path>
           </svg>
           <!-- Close icon (hidden by default) -->
-          <svg class="hidden h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+          <svg
+            class="hidden h-6 w-6"
+            xmlns="http://www.w3.org/2000/svg"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+            aria-hidden="true"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M6 18L18 6M6 6l12 12"></path>
           </svg>
         </button>
       </div>
@@ -82,16 +118,20 @@ const base = import.meta.env.BASE_URL || "/";
     <!-- Mobile Navigation Menu -->
     <div class="mobile-menu hidden md:hidden">
       <div class="px-2 pt-2 pb-3 space-y-1 sm:px-3 bg-gray-50 rounded-lg mt-2">
-        {items.map((item) => (
-          <a 
-            href={item.external ? item.href : base + item.href.replace('/', '')}
-            class="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-100 transition-colors"
-            target={item.external ? "_blank" : undefined}
-            rel={item.external ? "noopener noreferrer" : undefined}
-          >
-            {item.label}
-          </a>
-        ))}
+        {
+          items.map((item) => (
+            <a
+              href={
+                item.external ? item.href : base + item.href.replace("/", "")
+              }
+              class="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-100 transition-colors"
+              target={item.external ? "_blank" : undefined}
+              rel={item.external ? "noopener noreferrer" : undefined}
+            >
+              {item.label}
+            </a>
+          ))
+        }
       </div>
     </div>
   </div>
@@ -99,29 +139,30 @@ const base = import.meta.env.BASE_URL || "/";
 
 <script>
   // Mobile menu toggle functionality
-  const mobileMenuButton = document.querySelector('.mobile-menu-button');
-  const mobileMenu = document.querySelector('.mobile-menu');
-  const menuIcon = mobileMenuButton?.querySelector('svg:first-child');
-  const closeIcon = mobileMenuButton?.querySelector('svg:last-child');
+  const mobileMenuButton = document.querySelector(".mobile-menu-button");
+  const mobileMenu = document.querySelector(".mobile-menu");
+  const menuIcon = mobileMenuButton?.querySelector("svg:first-child");
+  const closeIcon = mobileMenuButton?.querySelector("svg:last-child");
 
-  mobileMenuButton?.addEventListener('click', () => {
-    const isExpanded = mobileMenuButton.getAttribute('aria-expanded') === 'true';
-    
-    mobileMenuButton.setAttribute('aria-expanded', (!isExpanded).toString());
-    mobileMenu?.classList.toggle('hidden');
-    
-    menuIcon?.classList.toggle('hidden');
-    closeIcon?.classList.toggle('hidden');
+  mobileMenuButton?.addEventListener("click", () => {
+    const isExpanded =
+      mobileMenuButton.getAttribute("aria-expanded") === "true";
+
+    mobileMenuButton.setAttribute("aria-expanded", (!isExpanded).toString());
+    mobileMenu?.classList.toggle("hidden");
+
+    menuIcon?.classList.toggle("hidden");
+    closeIcon?.classList.toggle("hidden");
   });
 
   // Close mobile menu when clicking outside
-  document.addEventListener('click', (event) => {
+  document.addEventListener("click", (event) => {
     const target = event.target as Element;
     if (!mobileMenuButton?.contains(target) && !mobileMenu?.contains(target)) {
-      mobileMenu?.classList.add('hidden');
-      mobileMenuButton?.setAttribute('aria-expanded', 'false');
-      menuIcon?.classList.remove('hidden');
-      closeIcon?.classList.add('hidden');
+      mobileMenu?.classList.add("hidden");
+      mobileMenuButton?.setAttribute("aria-expanded", "false");
+      menuIcon?.classList.remove("hidden");
+      closeIcon?.classList.add("hidden");
     }
   });
 </script>
