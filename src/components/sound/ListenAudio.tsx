@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from "react";
 
 // This is the url of the broadcast server
-const WS_URL = "ws://localhost:3001"; // Update if your server runs elsewhere
+const WS_URL = `${location.origin}/api/server`; // Update if your server runs elsewhere
 
 export default function ListenAudio() {
   const [channel, setChannel] = useState("1");
