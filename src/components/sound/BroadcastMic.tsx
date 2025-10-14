@@ -2,11 +2,11 @@ import { useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 
 // MIC WORKS, BUT NOT WELL
-
-// This is the url of the server
-const WS_URL = `${location.origin}/api/server`; // Update if your server runs elsewhere
 // This is the base url of the page
 const BASE_URL = import.meta.env.BASE_URL || "/";
+// This is the url of the server
+const WS_URL = `${location.origin}${BASE_URL}/api/server`; // Update if your server runs elsewhere
+
 
 export default function BroadcastMic() {
   const [channel, setChannel] = useState("1");
