@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 
 // This is the url of the server
-const WS_URL = "ws://localhost:3001"; // Update if your server runs elsewhere
+const WS_URL = import.meta.env.PUBLIC_WS_URL;
 // This is the base url of the page
 const BASE_URL = import.meta.env.BASE_URL || "/";
 // This is the location of the soundbyte
@@ -37,24 +37,6 @@ export default function BroadcastSoundbyte() {
     };
   }, [channel]);
 
-  function sendAudioInChunks(ws: WebSocket, channel: string, audioBuffer: AudioBuffer) {
-    // Flatten the audio data
-    const samples = audioBuffer.getChannelData(0);
-    // Set chunk size and send in chunks with delay
-    const chunkSize = 4096;
-    let i = 0;
-    const interval = setInterval(() => {
-      if (i >= samples.length) {
-        clearInterval(interval);
-        //ws.close(); //closing makes it only happen once
-        return;
-      }
-      const chunk = Array.from(samples.slice(i, i + chunkSize));
-      ws.send(JSON.stringify({ type: 'audio', channel: channel, data: chunk }));
-      i += chunkSize;
-    }, 50); // 50ms per chunk
-  }
-
   return (
     <div>
       <div className="mb-4">
@@ -80,13 +62,11 @@ export default function BroadcastSoundbyte() {
             const audioBuffer = await audioCtxRef.current!.decodeAudioData(arrayBuffer);
             const samples = audioBuffer.getChannelData(0);
             wsRef.current.send(JSON.stringify({ type: 'audio', channel: channel, data: Array.from(samples) }));
-            //sendAudioInChunks(wsRef.current, channel, audioBuffer);
           }
         }}>
           Play!
         </Button>
       </div>
-      {/* <div className="text-white mb-2">Listening on channel {channel}</div> */}
     </div>
   );
 }

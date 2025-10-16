@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 // MIC WORKS, BUT NOT WELL
 
 // This is the url of the server
-const WS_URL = "ws://localhost:3001"; // Update if your server runs elsewhere
+const WS_URL = import.meta.env.PUBLIC_WS_URL;
 // This is the base url of the page
 const BASE_URL = import.meta.env.BASE_URL || "/";
 
@@ -98,7 +98,6 @@ export default function BroadcastMic() {
         </Button>
 
       </div>
-      {/* <div className="text-white mb-2">Listening on channel {channel}</div> */}
     </div>
   );
 }

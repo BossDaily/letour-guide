@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from "react";
 
 // This is the url of the broadcast server
-const WS_URL = "ws://localhost:3001"; // Update if your server runs elsewhere
+const WS_URL = import.meta.env.PUBLIC_WS_URL;
 
 export default function ListenAudio() {
   const [channel, setChannel] = useState("1");
@@ -82,7 +82,6 @@ export default function ListenAudio() {
           <option value="3">three</option>
         </select>
       </div>
-      {/* <div className="text-white mb-2">Listening on channel {channel}</div> */}
     </div>
   );
 }

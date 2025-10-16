@@ -1,10 +1,11 @@
 // @ts-check
-
+import dotenv from 'dotenv';
 import { defineConfig } from 'astro/config';
 import react from '@astrojs/react';
 
-const base = '/~LeTour/v0.05/dist/' // make this the directory where all the pages go
+dotenv.config();
 
+const base = process.env.PUBLIC_BASE;
 
 // https://astro.build/config
 export default defineConfig({
