@@ -4,6 +4,7 @@ import "../styles/global.css";
 import ListenAudio from "@/components/sound/ListenAudio";
 import { Button } from "@/components/ui/button";
 
+
 const baseURL = import.meta.env.BASE_URL;
 
 // Custom navigation items for the listen page
@@ -20,33 +21,41 @@ const baseURL = import.meta.env.BASE_URL;
 <Layout title="RK Listen" description="Listen to audio content">
 	<div class="container mx-auto px-4">
 
-		<div class="max-w-2xl mx-auto flex justify-center items-center">
+		<div class="font-bold mx-auto flex justify-center border-5 border-yellow-400 w-2/3 md:w-2/5 h-13">
 			<ListenAudio client:only="react" />
 		</div>
 
-		<div class="text-center py-12">
+		<div class="text-center pt-4">
 			<h1 class="text-4xl font-bold text-gray-400 mb-6">
 				Listen to Broadcast
 			</h1>
-			<p class="text-lg text-gray-400 mb-8">
+			<!--<p class="text-lg text-gray-400 mb-8">
 				Only if the server is up lol
-			</p>
+			</p>-->
+		</div>
+
+		<div class="pb-6">
+			<img src="/~LeTour/v0.05/dist//images/gridPaper4K - Copy.jpg" 
+				class="mx-auto w-9/10"
+				alt="Background" 
+				width="500" height="300"
+			/>
 		</div>
 
 		<div>
 			<!-- This is where the mute and ask question buttons will go -->
 			<div class="flex flex-col items-center space-y-4">
-				<Button variant="letu" className="w-2/3 md:w-1/4 px-6 py-2">Mute</Button>
+				<Button variant="letu" className="w-2/3 md:w-2/5 px-6 py-2">Mute</Button>
 				<Button variant="letu" className="px-6 py-2">Ask Question</Button>
 			</div>
 		</div>
 
-		<div class="text-center mt-8">
+		<!-- <div class="text-center mt-8">
 			<a href={baseURL} class="inline-block mr-4">
 				<Button variant="letu" className="px-6 py-2"
 					>← Back to Home</Button
 				>
 			</a>
-		</div>
+		</div>-->
 	</div>
 </Layout>
