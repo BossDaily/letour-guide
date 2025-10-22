@@ -4,7 +4,7 @@ import { defineConfig } from 'astro/config';
 import react from '@astrojs/react';
 import nodeWebSocket from "astro-node-websocket"
 
-const base = '/~LeTour/v0.04/dist/' // make this the directory where all the pages go
+const base = '/' // make this the directory where all the pages go
 
 
 // https://astro.build/config
