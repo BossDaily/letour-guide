@@ -16,6 +16,7 @@ function toggleAudio() {
 		audioElement.muted = muted;
 	}
 }
+
 // Custom navigation items for the listen page
 //to use, in the Layout component, pass navigationItems={listenNavigationItems}
 // const listenNavigationItems = [
@@ -43,15 +44,11 @@ function toggleAudio() {
 		</div>
 
 		<div>
-			<!-- This is where the mute and ask question buttons will go -->
 			<div class="flex flex-col items-center space-y-4">
 				<Button variant="letu" className="px-6 py-2">Mute</Button>
-				<Button variant="letu" className="px-6 py-2"
-					>Ask Question</Button
-				>
+				<Button variant="letu" className="px-6 py-2">Ask Question</Button>
 			</div>
 		</div>
-
 		<div class="text-center mt-8">
 			<a href={baseURL} class="inline-block mr-4">
 				<Button variant="letu" className="px-6 py-2"
