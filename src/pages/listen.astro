@@ -21,32 +21,38 @@ const baseURL = import.meta.env.BASE_URL;
 <Layout title="RK Listen" description="Listen to audio content">
 	<div class="container mx-auto px-4">
 
-		<div class="font-bold mx-auto flex justify-center border-5 border-yellow-400 w-2/3 md:w-2/5 h-13">
+		<!-- mx-auto centers the element with its parent -->
+		<div class="mx-auto flex justify-center font-bold border-yellow-400 
+		border-5 w-full h-[12vw]
+		md:border-10 md:w-[70vw] md:h-[16vw]">
 			<ListenAudio client:only="react" />
 		</div>
 
 		<div class="text-center pt-4">
-			<h1 class="text-4xl font-bold text-gray-400 mb-6">
-				Listen to Broadcast
+			<h1 class="text-3xl font-bold text-gray-200 mb-6">
+				Connected users: #
 			</h1>
 			<!--<p class="text-lg text-gray-400 mb-8">
 				Only if the server is up lol
 			</p>-->
 		</div>
 
-		<div class="pb-6">
+		<div class="pb-6 relative flex justify-center"> <!-- object-cover makes the image dynamically crop -->
 			<img src="/~LeTour/v0.05/dist//images/gridPaper4K - Copy.jpg" 
-				class="mx-auto w-9/10"
+				class="w-full max-w-[600px] h-[225px] object-cover" 
 				alt="Background" 
-				width="500" height="300"
+			/>
+			<img src="/~LeTour/v0.05/dist//images/letu-logo.png" 
+				class="absolute top-23/50 left-1/2 -translate-x-1/2 -translate-y-1/2 max-w-[200px] mx-auto h-[200px] object-cover" 
+				alt="LETU Logo" 
 			/>
 		</div>
 
 		<div>
-			<!-- This is where the mute and ask question buttons will go -->
+			<!-- This is where the mute and ask question buttons go -->
 			<div class="flex flex-col items-center space-y-4">
-				<Button variant="letu" className="w-2/3 md:w-2/5 px-6 py-2">Mute</Button>
-				<Button variant="letu" className="px-6 py-2">Ask Question</Button>
+				<Button variant="letu" className="text-[18px] w-full max-w-[500px] px-6 py-2">Mute</Button>
+				<Button variant="letu" className="text-[18px] w-40 h-40 rounded-full px-6 py-2">Ask Question</Button>
 			</div>
 		</div>
 
