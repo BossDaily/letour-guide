@@ -7,7 +7,8 @@
     "build": "astro build",
     "preview": "astro preview",
     "astro": "astro",
-    "server": "node ./src/server/server.cjs"
+    "server": "node ./src/server/server.cjs",
+    "start": "node ./dist/server/entry.mjs"
   },
   "dependencies": {
     "@astrojs/mdx": "^4.3.5",
