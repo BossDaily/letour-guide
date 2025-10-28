@@ -5,9 +5,6 @@ import ListenAudio from "@/components/sound/ListenAudio";
 
 import { Button } from "@/components/ui/button";
 
-
-const baseURL = import.meta.env.BASE_URL || "/";
-
 let muted = false;
 //function for muting the page audio
 function toggleAudio() {
@@ -33,11 +30,12 @@ function toggleAudio() {
 
 <Layout title="LeTour Listen" description="Listen to audio content">
 	<div class="container mx-auto px-4">
-
 		<!-- mx-auto centers the element with its parent -->
-		<div class="mt-2 mx-auto flex justify-center font-bold border-yellow-400 
+		<div
+			class="mt-2 mx-auto flex justify-center font-bold border-yellow-400
 		border-10 w-full h-[16vw]
-		md:border-10 md:w-[70vw] md:h-[16vw]">
+		md:border-10 md:w-[70vw] md:h-[16vw]"
+		>
 			<ListenAudio client:only="react" />
 		</div>
 
@@ -50,22 +48,33 @@ function toggleAudio() {
 			</p>-->
 		</div>
 
-		<div class="pb-6 relative flex justify-center"> <!-- object-cover makes the image dynamically crop -->
-			<img src=`${baseURL}/images/gridPaper4K - Copy.jpg` 
-				class="w-full max-w-[400px] h-[300px] object-cover" 
-				alt="Background" 
+		<div class="pb-6 relative flex justify-center">
+			<!-- object-cover makes the image dynamically crop -->
+			<img
+				src={`images/gridPaper4K - Copy.jpg`}
+				class="w-full max-w-[400px] h-[300px] object-cover"
+				alt="Background"
 			/>
-			<img src=`${baseURL}/images/letu-logo.png` 
-				class="absolute top-23/50 left-1/2 -translate-x-1/2 -translate-y-1/2 max-w-[250px] mx-auto h-[250px] object-cover" 
-				alt="LETU Logo" 
+			<img
+				src={`images/letu-logo.png`}
+				class="absolute top-23/50 left-1/2 -translate-x-1/2 -translate-y-1/2 max-w-[250px] mx-auto h-[250px] object-cover"
+				alt="LETU Logo"
 			/>
 		</div>
 
 		<div>
 			<!-- This is where the mute and ask question buttons go -->
 			<div class="flex flex-col items-center space-y-4">
-				<Button variant="letu" className="mt-[1vw] text-[28px] font-bold w-full max-w-[500px] h-14 px-6 py-2">Mute</Button>
-				<Button variant="letu" className="mt-[1vw] text-[28px] font-bold w-50 h-50 rounded-full px-6 py-2">Ask A<br>Question</Button>
+				<Button
+					variant="letu"
+					className="mt-[1vw] text-[28px] font-bold w-full max-w-[500px] h-14 px-6 py-2"
+					>Mute</Button
+				>
+				<Button
+					variant="letu"
+					className="mt-[1vw] text-[28px] font-bold w-50 h-50 rounded-full px-6 py-2"
+					>Ask A<br />Question</Button
+				>
 			</div>
 		</div>
 
