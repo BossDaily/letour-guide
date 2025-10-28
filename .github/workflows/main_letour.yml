@@ -27,7 +27,7 @@ jobs:
         run: |
           npm install
           npm run build
-          npm run server --if-present
+          timeout 15 npm run server || true
           npm run test --if-present
 
       - name: Upload artifact for deployment job
