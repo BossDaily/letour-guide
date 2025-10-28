@@ -10,7 +10,6 @@ const base = '/' // make this the directory where all the pages go
 
 // https://astro.build/config
 export default defineConfig({
-  port: 8080,
   output: 'server',
   base: base, //where the project is deployed
   vite: {
