@@ -1,4 +1,9 @@
 ---
+//To do:
+//	- Prevent scrolling on this page.
+//	- Make this page iPad-friendly.
+//	- Make the space between elements dynamically change depending on the device's height.
+
 import Layout from "../layouts/listenLayout.astro";
 import "../styles/global.css";
 import ListenAudio from "@/components/sound/ListenAudio";
@@ -41,6 +46,7 @@ function toggleAudio() {
 			<ListenAudio client:only="react" />
 		</div>
 
+		<!-- Display number of connected users here in place of the # symbol: -->
 		<div class="text-center pt-4">
 			<h1 class="mt-1 text-3xl font-bold text-gray-200 mb-6">
 				Connected users: #
@@ -51,11 +57,11 @@ function toggleAudio() {
 		</div>
 
 		<div class="pb-6 relative flex justify-center"> <!-- object-cover makes the image dynamically crop -->
-			<img src=`${baseURL}/images/gridPaper4K - Copy.jpg` 
+			<img src=`images/gridPaperBg.jpg` 
 				class="w-full max-w-[400px] h-[300px] object-cover" 
 				alt="Background" 
 			/>
-			<img src=`${baseURL}/images/letu-logo.png` 
+			<img src=`images/letu-logo.png` 
 				class="absolute top-23/50 left-1/2 -translate-x-1/2 -translate-y-1/2 max-w-[250px] mx-auto h-[250px] object-cover" 
 				alt="LETU Logo" 
 			/>
