@@ -1,0 +1,11 @@
+version: '3.8'
+services:
+  websocket-server:
+    build: .
+    container_name: letour-guide-server
+    ports:
+      - "50513:50513"
+    restart: unless-stopped
+    environment:
+      NODE_ENV: production
+    command: ["node", "src/server/server.cjs"]

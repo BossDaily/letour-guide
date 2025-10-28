@@ -22,14 +22,14 @@ const baseURL = import.meta.env.BASE_URL;
 	<div class="container mx-auto px-4">
 
 		<!-- mx-auto centers the element with its parent -->
-		<div class="mx-auto flex justify-center font-bold border-yellow-400 
-		border-5 w-full h-[12vw]
+		<div class="mt-2 mx-auto flex justify-center font-bold border-yellow-400 
+		border-10 w-full h-[16vw]
 		md:border-10 md:w-[70vw] md:h-[16vw]">
 			<ListenAudio client:only="react" />
 		</div>
 
 		<div class="text-center pt-4">
-			<h1 class="text-3xl font-bold text-gray-200 mb-6">
+			<h1 class="mt-1 text-3xl font-bold text-gray-200 mb-6">
 				Connected users: #
 			</h1>
 			<!--<p class="text-lg text-gray-400 mb-8">
@@ -39,11 +39,11 @@ const baseURL = import.meta.env.BASE_URL;
 
 		<div class="pb-6 relative flex justify-center"> <!-- object-cover makes the image dynamically crop -->
 			<img src="/~LeTour/v0.05/dist//images/gridPaper4K - Copy.jpg" 
-				class="w-full max-w-[600px] h-[225px] object-cover" 
+				class="w-full max-w-[400px] h-[300px] object-cover" 
 				alt="Background" 
 			/>
 			<img src="/~LeTour/v0.05/dist//images/letu-logo.png" 
-				class="absolute top-23/50 left-1/2 -translate-x-1/2 -translate-y-1/2 max-w-[200px] mx-auto h-[200px] object-cover" 
+				class="absolute top-23/50 left-1/2 -translate-x-1/2 -translate-y-1/2 max-w-[250px] mx-auto h-[250px] object-cover" 
 				alt="LETU Logo" 
 			/>
 		</div>
@@ -51,8 +51,8 @@ const baseURL = import.meta.env.BASE_URL;
 		<div>
 			<!-- This is where the mute and ask question buttons go -->
 			<div class="flex flex-col items-center space-y-4">
-				<Button variant="letu" className="text-[18px] w-full max-w-[500px] px-6 py-2">Mute</Button>
-				<Button variant="letu" className="text-[18px] w-40 h-40 rounded-full px-6 py-2">Ask Question</Button>
+				<Button variant="letu" className="mt-[1vw] text-[28px] font-bold w-full max-w-[500px] h-14 px-6 py-2">Mute</Button>
+				<Button variant="letu" className="mt-[1vw] text-[28px] font-bold w-50 h-50 rounded-full px-6 py-2">Ask A<br>Question</Button>
 			</div>
 		</div>
 
