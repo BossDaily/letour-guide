@@ -2,10 +2,12 @@
 import Layout from "../layouts/listenLayout.astro";
 import "../styles/global.css";
 import ListenAudio from "@/components/sound/ListenAudio";
+
 import { Button } from "@/components/ui/button";
 
 
-const baseURL = import.meta.env.BASE_URL;
+const baseURL = import.meta.env.BASE_URL || "/";
+
 let muted = false;
 //function for muting the page audio
 function toggleAudio() {
@@ -49,11 +51,11 @@ function toggleAudio() {
 		</div>
 
 		<div class="pb-6 relative flex justify-center"> <!-- object-cover makes the image dynamically crop -->
-			<img src="/~LeTour/v0.05/dist//images/gridPaper4K - Copy.jpg" 
+			<img src=`${baseURL}/images/gridPaper4K - Copy.jpg` 
 				class="w-full max-w-[400px] h-[300px] object-cover" 
 				alt="Background" 
 			/>
-			<img src="/~LeTour/v0.05/dist//images/letu-logo.png" 
+			<img src=`${baseURL}/images/letu-logo.png` 
 				class="absolute top-23/50 left-1/2 -translate-x-1/2 -translate-y-1/2 max-w-[250px] mx-auto h-[250px] object-cover" 
 				alt="LETU Logo" 
 			/>
