@@ -7,6 +7,7 @@ const wss = new WebSocket.Server({ port: port });
 const channels = {}; // { channelId: Set of sockets }
 
 wss.on('connection', (ws) => {
+  console.log("Websocket server is connected to!")
   ws.on('message', (msg) => {
     console.log('received audio');
     // Expect JSON: { type, channel, data }
