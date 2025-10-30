@@ -20,7 +20,7 @@ const baseURL = import.meta.env.BASE_URL;
 	<!-- <div class="grid place-items-center h-screen content-center"> -->
 	<div class="container text-center mx-auto px-4">
 		<a href={baseURL} class="underline">
-			<Button variant="letu" className="mt-4 mb-4 text-[28px] font-bold w-full max-w-[500px] h-14 px-6 py-2">Go Home</Button>
+			<Button variant="letu" className="mt-3 mb-3 text-[28px] font-bold w-full max-w-[500px] h-14 px-6 py-2">Go Home</Button>
 		</a>
 		
 		<!-- Display number of connected users here in place of the # symbol: -->
@@ -30,7 +30,7 @@ const baseURL = import.meta.env.BASE_URL;
 
 		<div class="pb-6 relative flex justify-center"> <!-- object-cover makes the image dynamically crop -->
 			<img src=`images/gridPaperBg.jpg` 
-				class="w-full max-w-[400px] h-[225px] object-cover" 
+				class="w-full h-[250px] object-cover" 
 				alt="Background" 
 			/>
 			<img src=`images/letu-logo.png` 
@@ -39,8 +39,13 @@ const baseURL = import.meta.env.BASE_URL;
 			/>
 		</div>
 
-		<BroadcastSoundbyte client:only="react"/>
-		<BroadcastMic client:only="react" />
+		<!-- Broadcast button: -->
+		<div class="mb-4 border-yellow-400 border-10">
+			<BroadcastMic client:only="react" />
+		</div>
+			
+		<!-- Sound effect button: -->
+		<!-- <BroadcastSoundbyte client:only="react"/> -->
 
 		<!-- The answer question button: -->
 		<div class="flex flex-col items-center space-y-4">

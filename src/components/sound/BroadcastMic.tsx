@@ -76,22 +76,22 @@ export default function BroadcastMic() {
 
   return (
     <div>
-      <div className="mb-4">
-        <label htmlFor="channel" className="mr-2">Broadcast to:</label>
+      <div className="">
+        <label htmlFor="channel" className="mr-2 text-3xl font-bold text-gray-200">Broadcast to: </label>
         <select
           id="channel"
           name="channel"
-          className="bg-blue-950 p-2 rounded"
+          className="text-3xl font-bold text-gray-200"
           value={channel}
           onChange={e => setChannel(e.target.value)}
         >
-          <option value="1">one</option>
-          <option value="2">two</option>
-          <option value="3">three</option>
+          <option className="text-base font-bold text-gray-600" value="1">one</option>
+          <option className="text-base font-bold text-gray-600" value="2">two</option>
+          <option className="text-base font-bold text-gray-600" value="3">three</option>
         </select>
       </div>
-      <div className="mb-4">
-        <Button variant="letu" onClick={async () => {
+      <div className="">
+        <Button className="mb-4 mt-2 text-[28px] font-bold w-full max-w-[80vw] h-12 px-6 py-2" variant="letu" onClick={async () => {
           setMicEnable(!micEnable);
         }}>
           {micEnable ? "Stop Mic" : "Start Mic"}

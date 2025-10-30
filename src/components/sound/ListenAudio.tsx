@@ -77,9 +77,9 @@ export default function ListenAudio() {
           value={channel}
           onChange={e => setChannel(e.target.value)}
         >
-          <option value="1">one</option>
-          <option value="2">two</option>
-          <option value="3">three</option>
+          <option className="text-base font-bold text-gray-600" value="1">one</option>
+          <option className="text-base font-bold text-gray-600" value="2">two</option>
+          <option className="text-base font-bold text-gray-600" value="3">three</option>
         </select>
       </div>
     </div>
