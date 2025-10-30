@@ -26,8 +26,7 @@ jobs:
       - name: npm install, build, and test
         run: |
           npm install
-          npm run build
-          timeout 15 npm run server || true
+          npm run build --if-present
           npm run test --if-present
 
       - name: Upload artifact for deployment job
@@ -52,9 +51,9 @@ jobs:
       - name: Login to Azure
         uses: azure/login@v2
         with:
-          client-id: ${{ secrets.AZUREAPPSERVICE_CLIENTID_349B50A32F9C46AB9A6114046D99526C }}
-          tenant-id: ${{ secrets.AZUREAPPSERVICE_TENANTID_6FCC7E5C70EC4A06B38CDB8C6C6626FA }}
-          subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_3E96C0EBA53648FF95657FBE6D88FDD2 }}
+          client-id: ${{ secrets.AZUREAPPSERVICE_CLIENTID_37DB7D527EA84E0A8281F9E42D79BECA }}
+          tenant-id: ${{ secrets.AZUREAPPSERVICE_TENANTID_63ED44470BD042D9BC8D7D6D2889E174 }}
+          subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_A3D5410F318F479DB5A24E9E227326ED }}
 
       - name: 'Deploy to Azure Web App'
         id: deploy-to-webapp
@@ -63,5 +62,4 @@ jobs:
           app-name: 'letour'
           slot-name: 'Production'
           package: .
-
-
+          
