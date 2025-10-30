@@ -5,6 +5,7 @@ export default function MuteButton() {
   const [muted, setMuted] = useState(false);
 
   const toggleMute = () => {
+    console.log("Toggling mute. Current state:", muted);
     setMuted(!muted);
     const audioElement = document.querySelector("audio");
     if (audioElement) {
