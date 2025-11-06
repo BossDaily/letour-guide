@@ -9,6 +9,7 @@ export default function ListenAudio() {
   const [channel, setChannel] = useState("1");
   const wsRef = useRef<WebSocket | null>(null);
   const audioCtxRef = useRef<AudioContext | null>(null);
+  const gainNodeRef = useRef<GainNode | null>(null);
 
   //useEffect to set up websocket connection when channel changes
   useEffect(() => {
@@ -18,6 +19,9 @@ export default function ListenAudio() {
     }
     if (!audioCtxRef.current) {
       audioCtxRef.current = new (window.AudioContext || (window as any).webkitAudioContext)();
+      // Create a gain node for volume control
+      gainNodeRef.current = audioCtxRef.current.createGain();
+      gainNodeRef.current.connect(audioCtxRef.current.destination);
     }
     const ws = new WebSocket(WS_URL);
     wsRef.current = ws;
@@ -31,6 +35,7 @@ export default function ListenAudio() {
         const { type, data, sampleRate } = JSON.parse(msg.data);
         if (type === "audio" && Array.isArray(data)) {
           const ctx = audioCtxRef.current!;
+          const gainNode = gainNodeRef.current!;
           let buffer;
           if (sampleRate && sampleRate !== ctx.sampleRate) {
             // Resample if needed
@@ -45,7 +50,7 @@ export default function ListenAudio() {
             offlineCtx.startRendering().then(renderedBuffer => {
               const playSource = ctx.createBufferSource();
               playSource.buffer = renderedBuffer;
-              playSource.connect(ctx.destination);
+              playSource.connect(gainNode); // Connect to gain node instead
               playSource.start();
             });
           } else {
@@ -54,19 +59,28 @@ export default function ListenAudio() {
             buffer.getChannelData(0).set(data);
             const source = ctx.createBufferSource();
             source.buffer = buffer;
-            source.connect(ctx.destination);
+            source.connect(gainNode); // Connect to gain node instead
             source.start();
           }
         } 
       } catch (error) {
-      console.error("Error processing audio data:", error);
-    }
-  };
+        console.error("Error processing audio data:", error);
+      }
+    };
 
     return () => {
       ws.close();
     };
   }, [channel]);
+
+  // Expose mute function globally
+  useEffect(() => {
+    (window as any).muteAudio = (mute: boolean) => {
+      if (gainNodeRef.current) {
+        gainNodeRef.current.gain.value = mute ? 0 : 1;
+      }
+    };
+  }, []);
 
   return (
     <div>

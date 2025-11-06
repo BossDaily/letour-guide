@@ -5,11 +5,12 @@ export default function MuteButton() {
   const [muted, setMuted] = useState(false);
 
   const toggleMute = () => {
-    console.log("Toggling mute. Current state:", muted);
-    setMuted(!muted);
-    const audioElement = document.querySelector("audio");
-    if (audioElement) {
-      audioElement.muted = !muted;
+    const newMutedState = !muted;
+    setMuted(newMutedState);
+
+    // Call the global mute function
+    if (typeof (window as any).muteAudio === 'function') {
+      (window as any).muteAudio(newMutedState);
     }
   };
 
@@ -22,4 +23,4 @@ export default function MuteButton() {
       {muted ? "Unmute" : "Mute"}
     </Button>
   );
-};
+}
