@@ -5,7 +5,11 @@ const BASE_URL = import.meta.env.BASE_URL || "/";
 // This is the url of the broadcast server
 const WS_URL = `${location.origin}${BASE_URL.replace('client', 'server')}api/server`; // Update if your server runs elsewhere
 
-export default function ListenAudio() {
+type ListenAudioProps = {
+  muted: boolean;
+};
+
+export default function ListenAudio({ muted }: ListenAudioProps) {
   const [channel, setChannel] = useState("1");
   const wsRef = useRef<WebSocket | null>(null);
   const audioCtxRef = useRef<AudioContext | null>(null);
@@ -28,6 +32,10 @@ export default function ListenAudio() {
 
     ws.onmessage = (msg) => {
       try {
+        //if muted is true, do not play audio
+        if (muted) {
+          return;
+        }
         const { type, data, sampleRate } = JSON.parse(msg.data);
         if (type === "audio" && Array.isArray(data)) {
           const ctx = audioCtxRef.current!;

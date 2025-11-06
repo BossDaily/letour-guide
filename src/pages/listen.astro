@@ -6,22 +6,8 @@
 
 import Layout from "../layouts/listenLayout.astro";
 import "../styles/global.css";
-import ListenAudio from "@/components/sound/ListenAudio";
 
-import MuteButton from "@/components/ui/muteButton";
-import { Button } from "@/components/ui/button";
-
-let muted = false;
-//function for muting the page audio
-function toggleAudio() {
-	//get the audio element
-	const audioElement = document.querySelector("audio");
-	//if it exists, toggle the muted property based on the muted boolean
-	if (audioElement) {
-		muted = !muted;
-		audioElement.muted = muted;
-	}
-}
+import ListenPanel from "@/components/sound/ListenPanel";
 
 // Custom navigation items for the listen page
 //to use, in the Layout component, pass navigationItems={listenNavigationItems}
@@ -38,11 +24,9 @@ function toggleAudio() {
 	<div class="container mx-auto px-4">
 		<!-- mx-auto centers the element with its parent -->
 		<div
-			class="mt-2 mx-auto flex justify-center font-bold border-yellow-400
-		border-10 w-full h-[16vw]
-		md:border-10 md:w-[70vw] md:h-[16vw]"
+			class="mt-2 mx-auto flex justify-center font-bold border-yellow-400 border-10 w-full h-[16vw] md:border-10 md:w-[70vw] md:h-[16vw]"
 		>
-			<ListenAudio client:only="react" />
+			<ListenPanel client:load />
 		</div>
 
 		<!-- Display number of connected users here in place of the # symbol: -->
@@ -69,22 +53,7 @@ function toggleAudio() {
 			/>
 		</div>
 
-		<div>
-			<!-- This is where the mute and ask question buttons go -->
-			<div class="flex flex-col items-center space-y-4">
-				<!-- <Button
-					variant="letu"
-					className="mt-[1vw] text-[28px] font-bold w-full max-w-[500px] h-14 px-6 py-2"
-					>Mute</Button
-				> -->
-				<MuteButton client:load />
-				<Button
-					variant="letu"
-					className="mt-[1vw] text-[28px] font-bold w-50 h-50 rounded-full px-6 py-2"
-					>Ask A<br />Question</Button
-				>
-			</div>
-		</div>
+		<!-- Mute and Ask Question buttons are now inside ListenPanel -->
 
 		<!-- <div class="text-center mt-8">
 			<a href={baseURL} class="inline-block mr-4">
