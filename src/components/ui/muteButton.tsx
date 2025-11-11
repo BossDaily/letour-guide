@@ -8,12 +8,10 @@ type MuteButtonProps = {
 
 export default function MuteButton({ muted, setMuted }: MuteButtonProps) {
   const toggleMute = () => {
-    const newMutedState = !muted;
-    setMuted(newMutedState);
-
-    // Call the global mute function
-    if (typeof (window as any).muteAudio === 'function') {
-      (window as any).muteAudio(newMutedState);
+    setMuted(!muted);
+    const audioElement = document.querySelector("audio");
+    if (audioElement) {
+      audioElement.muted = !muted;
     }
   };
 
