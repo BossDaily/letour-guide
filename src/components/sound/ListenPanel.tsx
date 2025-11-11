@@ -13,10 +13,10 @@ export default function ListenPanel() {
       </div>
       <div className="flex flex-col items-center space-y-4">
         <MuteButton muted={muted} setMuted={setMuted} />
-        <Button
+        {/* <Button
           variant="letu"
           className="mt-[1vw] text-[28px] font-bold w-50 h-50 rounded-full px-6 py-2"
-        >Ask A<br />Question</Button>
+        >Ask A<br />Question</Button> */}
       </div>
     </>
   );
