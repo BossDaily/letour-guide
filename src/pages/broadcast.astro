@@ -6,8 +6,10 @@
 //main imports
 import Layout from "../layouts/listenLayout.astro";
 import "../styles/global.css";
+import defineConfig from "astro.config.mjs";
 // Component Imports
 import { Button } from "@/components/ui/button";
+import { navigate } from "astro:transitions/client";
 import BroadcastSoundbyte from "@/components/sound/BroadcastSoundbyte";
 import BroadcastMic from "@/components/sound/BroadcastMic";
 //variables
@@ -22,30 +24,28 @@ const baseURL = import.meta.env.BASE_URL;
 		</a>
 		
 		<!-- Display number of connected users here in place of the # symbol: -->
-		<h1 class="mt-2 text-3xl font-bold text-gray-200 mb-6">
+		<h1 class="mt-2 mb-2 text-3xl font-bold text-gray-200 mb-6">
 			Connected users: #
 		</h1>
 
 		<div class="pb-6 relative flex justify-center"> <!-- object-cover makes the image dynamically crop -->
-			<img src=`images/gridPaperBg.jpg` 
-				class="w-full h-[250px] object-cover" 
+			<img src=`images/LeTour Guide QR Code (Yellow).png` 
+				class="h-[300px] object-cover" 
 				alt="Background" 
-			/>	
+			/>
 		</div>
 
 		<!-- Broadcast button: -->
 		<div class="mb-4 border-yellow-400 border-10">
 			<BroadcastMic client:only="react" />
 		</div>
-			
+		
 		<!-- Sound effect button: -->
-		<BroadcastSoundbyte client:only="react"/>
+		<!-- <BroadcastSoundbyte client:only="react"/> -->
 
 		<!-- The answer question button: -->
-		<!-- ANSWER QUESTION BUTTON HAS BEEN COMMENTED OUT:
 		<div class="flex flex-col items-center space-y-4">
 			<Button variant="letu" className="mt-[1vw] text-[28px] font-bold w-r40 h-40 bg-yellow-700 rounded-full px-6 py-2">No Incoming<br>Questions</Button>
 		</div>
-		-->
 	</div>
 </Layout>

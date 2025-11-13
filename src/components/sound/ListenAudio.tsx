@@ -1,27 +1,27 @@
 import React, { useEffect, useRef, useState } from "react";
 
-type ListenAudioProps = {
-  muted: boolean;
-};
+// This is the base url of the page
+const BASE_URL = import.meta.env.BASE_URL || "/";
+// This is the url of the broadcast server
+const WS_URL = `${location.origin}${BASE_URL.replace('client', 'server')}api/server`; // Update if your server runs elsewhere
 
-export default function ListenAudio({ muted }: ListenAudioProps) {
+export default function ListenAudio() {
   const [channel, setChannel] = useState("1");
   const wsRef = useRef<WebSocket | null>(null);
   const audioCtxRef = useRef<AudioContext | null>(null);
+  const gainNodeRef = useRef<GainNode | null>(null);
 
+  //useEffect to set up websocket connection when channel changes
   useEffect(() => {
-    // Only construct WS_URL in the browser
-    if (typeof window === "undefined") return;
-
-    const BASE_URL = import.meta.env.BASE_URL || "/";
-    const WS_URL = `${window.location.origin}${BASE_URL.replace('client', 'server')}api/server`;
-
     // Clean up previous connection
     if (wsRef.current) {
       wsRef.current.close();
     }
     if (!audioCtxRef.current) {
       audioCtxRef.current = new (window.AudioContext || (window as any).webkitAudioContext)();
+      // Create a gain node for volume control
+      gainNodeRef.current = audioCtxRef.current.createGain();
+      gainNodeRef.current.connect(audioCtxRef.current.destination);
     }
     const ws = new WebSocket(WS_URL);
     wsRef.current = ws;
@@ -32,16 +32,16 @@ export default function ListenAudio({ muted }: ListenAudioProps) {
 
     ws.onmessage = (msg) => {
       try {
-        if (muted) {
-          return;
-        }
         const { type, data, sampleRate } = JSON.parse(msg.data);
         if (type === "audio" && Array.isArray(data)) {
           const ctx = audioCtxRef.current!;
+          const gainNode = gainNodeRef.current!;
           let buffer;
           if (sampleRate && sampleRate !== ctx.sampleRate) {
+            // Resample if needed
             buffer = ctx.createBuffer(1, data.length, sampleRate);
             buffer.getChannelData(0).set(data);
+            // Use OfflineAudioContext to resample
             const offlineCtx = new OfflineAudioContext(1, data.length * ctx.sampleRate / sampleRate, ctx.sampleRate);
             const source = offlineCtx.createBufferSource();
             source.buffer = buffer;
@@ -50,15 +50,16 @@ export default function ListenAudio({ muted }: ListenAudioProps) {
             offlineCtx.startRendering().then(renderedBuffer => {
               const playSource = ctx.createBufferSource();
               playSource.buffer = renderedBuffer;
-              playSource.connect(ctx.destination);
+              playSource.connect(gainNode); // Connect to gain node instead
               playSource.start();
             });
           } else {
+            // No resampling needed
             buffer = ctx.createBuffer(1, data.length, ctx.sampleRate);
             buffer.getChannelData(0).set(data);
             const source = ctx.createBufferSource();
             source.buffer = buffer;
-            source.connect(ctx.destination);
+            source.connect(gainNode); // Connect to gain node instead
             source.start();
           }
         } 
@@ -70,7 +71,16 @@ export default function ListenAudio({ muted }: ListenAudioProps) {
     return () => {
       ws.close();
     };
-  }, [channel, muted]);
+  }, [channel]);
+
+  // Expose mute function globally
+  useEffect(() => {
+    (window as any).muteAudio = (mute: boolean) => {
+      if (gainNodeRef.current) {
+        gainNodeRef.current.gain.value = mute ? 0 : 1;
+      }
+    };
+  }, []);
 
   return (
     <div>
