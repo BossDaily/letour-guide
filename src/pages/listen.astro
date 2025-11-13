@@ -22,7 +22,9 @@ import ListenPanel from "@/components/sound/ListenPanel";
 
 <Layout title="LeTour Listen" description="Listen to audio content">
 	<div class="container mx-auto px-4">
-		<div class="mt-2 mx-auto flex justify-center font-bold border-yellow-400 border-10 w-full h-[16vw] md:border-10 md:w-[70vw] md:h-[16vw]">
+		<div
+			class="mt-2 mx-auto flex justify-center font-bold border-yellow-400 border-10 w-full h-[16vw] md:border-10 md:w-[70vw] md:h-[16vw]"
+		>
 			<ListenPanel client:load />
 		</div>
 		<!-- Display number of connected users here in place of the # symbol: -->
@@ -31,6 +33,5 @@ import ListenPanel from "@/components/sound/ListenPanel";
 				Connected users: #
 			</h1>
 		</div>
-	</div>
 	</div>
 </Layout>
