@@ -21,6 +21,7 @@ export default function ListenAudio() {
       audioCtxRef.current = new (window.AudioContext || (window as any).webkitAudioContext)();
       // Create a gain node for volume control
       gainNodeRef.current = audioCtxRef.current.createGain();
+      gainNodeRef.current.gain.value = 1; // Ensure unmuted on init
       gainNodeRef.current.connect(audioCtxRef.current.destination);
     }
     const ws = new WebSocket(WS_URL);
