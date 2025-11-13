@@ -22,61 +22,15 @@ import ListenPanel from "@/components/sound/ListenPanel";
 
 <Layout title="LeTour Listen" description="Listen to audio content">
 	<div class="container mx-auto px-4">
-		<!-- mx-auto centers the element with its parent -->
-		<div
-			class="mt-2 mx-auto flex justify-center font-bold border-yellow-400 border-10 w-full h-[16vw] md:border-10 md:w-[70vw] md:h-[16vw]"
-		>
+		<div class="mt-2 mx-auto flex justify-center font-bold border-yellow-400 border-10 w-full h-[16vw] md:border-10 md:w-[70vw] md:h-[16vw]">
 			<ListenPanel client:load />
 		</div>
-
 		<!-- Display number of connected users here in place of the # symbol: -->
 		<div class="text-center pt-4">
 			<h1 class="mt-1 text-3xl font-bold text-gray-200 mb-6">
 				Connected users: #
 			</h1>
-			<!--<p class="text-lg text-gray-400 mb-8">
-				Only if the server is up lol
-			</p>-->
 		</div>
-
-		<div class="pb-6 relative flex justify-center">
-			<!-- object-cover makes the image dynamically crop -->
-			<img
-				src={`images/gridPaper4K - Copy.jpg`}
-				class="w-full max-w-[400px] h-[300px] object-cover"
-				alt="Background"
-			/>
-			<img
-				src={`images/letu-logo.png`}
-				class="absolute top-23/50 left-1/2 -translate-x-1/2 -translate-y-1/2 max-w-[250px] mx-auto h-[250px] object-cover"
-				alt="LETU Logo"
-			/>
-		</div>
-
-		<div>
-			<!-- This is where the mute and ask question buttons go -->
-			<div class="flex flex-col items-center space-y-4">
-				<!-- <Button
-					variant="letu"
-					className="mt-[1vw] text-[28px] font-bold w-full max-w-[500px] h-14 px-6 py-2"
-					>Mute</Button
-				> -->
-				<MuteButton client:load />
-				<!-- ASK QUESTION BUTTON HAS BEEN COMMENTED OUT:
-				<Button
-					variant="letu"
-					className="mt-[6vw] text-[28px] font-bold w-50 h-50 rounded-full px-6 py-2"
-					>Ask A<br />Question</Button
-				>-->
-			</div>
-		</div>
-
-		<!-- <div class="text-center mt-8">
-			<a href={baseURL} class="inline-block mr-4">
-				<Button variant="letu" className="px-6 py-2"
-					>← Back to Home</Button
-				>
-			</a>
-		</div>-->
+	</div>
 	</div>
 </Layout>

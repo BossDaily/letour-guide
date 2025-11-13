@@ -8,15 +8,26 @@ export default function ListenPanel() {
 
   return (
     <>
-      <div className="mt-2 mx-auto flex justify-center font-bold border-yellow-400 border-10 w-full h-[16vw] md:border-10 md:w-[70vw] md:h-[16vw]">
-        <ListenAudio muted={muted} />
-      </div>
-      <div className="flex flex-col items-center space-y-4">
-        <MuteButton muted={muted} setMuted={setMuted} />
-        {/* <Button
-          variant="letu"
-          className="mt-[1vw] text-[28px] font-bold w-50 h-50 rounded-full px-6 py-2"
-        >Ask A<br />Question</Button> */}
+      {/* Audio and logo section */}
+      <div className="flex flex-col items-center justify-center w-full">
+        <div className="w-full flex justify-center">
+          <ListenAudio muted={muted} />
+        </div>
+        <div className="relative flex flex-col items-center pb-6">
+          <img
+            src={"images/gridPaper4K - Copy.jpg"}
+            className="w-full max-w-[400px] h-[300px] object-cover"
+            alt="Background"
+          />
+          <img
+            src={"images/letu-logo.png"}
+            className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 max-w-[250px] mx-auto h-[250px] object-cover"
+            alt="LETU Logo"
+          />
+          <div className="mt-[270px] flex flex-col items-center w-full">
+            <MuteButton muted={muted} setMuted={setMuted} />
+          </div>
+        </div>
       </div>
     </>
   );

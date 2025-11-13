@@ -1,10 +1,5 @@
 import React, { useEffect, useRef, useState } from "react";
 
-// This is the base url of the page
-const BASE_URL = import.meta.env.BASE_URL || "/";
-// This is the url of the broadcast server
-const WS_URL = `${location.origin}${BASE_URL.replace('client', 'server')}api/server`; // Update if your server runs elsewhere
-
 type ListenAudioProps = {
   muted: boolean;
 };
@@ -14,8 +9,13 @@ export default function ListenAudio({ muted }: ListenAudioProps) {
   const wsRef = useRef<WebSocket | null>(null);
   const audioCtxRef = useRef<AudioContext | null>(null);
 
-  //useEffect to set up websocket connection when channel changes
   useEffect(() => {
+    // Only construct WS_URL in the browser
+    if (typeof window === "undefined") return;
+
+    const BASE_URL = import.meta.env.BASE_URL || "/";
+    const WS_URL = `${window.location.origin}${BASE_URL.replace('client', 'server')}api/server`;
+
     // Clean up previous connection
     if (wsRef.current) {
       wsRef.current.close();
@@ -32,7 +32,6 @@ export default function ListenAudio({ muted }: ListenAudioProps) {
 
     ws.onmessage = (msg) => {
       try {
-        //if muted is true, do not play audio
         if (muted) {
           return;
         }
@@ -41,10 +40,8 @@ export default function ListenAudio({ muted }: ListenAudioProps) {
           const ctx = audioCtxRef.current!;
           let buffer;
           if (sampleRate && sampleRate !== ctx.sampleRate) {
-            // Resample if needed
             buffer = ctx.createBuffer(1, data.length, sampleRate);
             buffer.getChannelData(0).set(data);
-            // Use OfflineAudioContext to resample
             const offlineCtx = new OfflineAudioContext(1, data.length * ctx.sampleRate / sampleRate, ctx.sampleRate);
             const source = offlineCtx.createBufferSource();
             source.buffer = buffer;
@@ -57,7 +54,6 @@ export default function ListenAudio({ muted }: ListenAudioProps) {
               playSource.start();
             });
           } else {
-            // No resampling needed
             buffer = ctx.createBuffer(1, data.length, ctx.sampleRate);
             buffer.getChannelData(0).set(data);
             const source = ctx.createBufferSource();
@@ -67,14 +63,14 @@ export default function ListenAudio({ muted }: ListenAudioProps) {
           }
         } 
       } catch (error) {
-      console.error("Error processing audio data:", error);
-    }
-  };
+        console.error("Error processing audio data:", error);
+      }
+    };
 
     return () => {
       ws.close();
     };
-  }, [channel]);
+  }, [channel, muted]);
 
   return (
     <div>
