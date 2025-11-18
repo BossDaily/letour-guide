@@ -33,7 +33,20 @@ export default function ListenAudio() {
 
     ws.onmessage = (msg) => {
       try {
-        const { type, data, sampleRate } = JSON.parse(msg.data);
+        let parsed;
+        if (msg.data instanceof ArrayBuffer) {
+          // Binary message: decode to string then parse JSON
+          const text = new TextDecoder().decode(msg.data);
+          parsed = JSON.parse(text);
+        } else if (typeof msg.data === 'string') {
+          // Text message: parse JSON directly
+          parsed = JSON.parse(msg.data);
+        } else {
+          // Unknown format
+          console.warn('Unknown WebSocket message format', msg.data);
+          return;
+        }
+        const { type, data, sampleRate } = parsed;
         if (type === "audio" && Array.isArray(data)) {
           const ctx = audioCtxRef.current!;
           const gainNode = gainNodeRef.current!;
