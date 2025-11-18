@@ -14,8 +14,20 @@ export default function MuteButton() {
         setMuted(false);
       }
     };
-  });
-  
+
+    window.addEventListener(
+      "audioPlaybackChange",
+      handlePlaybackChange as EventListener
+    );
+
+    return () => {
+      window.removeEventListener(
+        "audioPlaybackChange",
+        handlePlaybackChange as EventListener
+      );
+    };
+  }, [muted]);
+
   const toggleMute = () => {
     const newMutedState = !muted;
     setMuted(newMutedState);
@@ -25,6 +37,8 @@ export default function MuteButton() {
       (window as any).muteAudio(newMutedState);
     }
   };
+
+  
 
   return (
     <Button
