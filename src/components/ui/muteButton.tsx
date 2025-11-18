@@ -9,9 +9,17 @@ export default function MuteButton() {
   useEffect(() => {
     const handlePlaybackChange = (event: Event) => {
       if (!(event instanceof CustomEvent)) return;
-      const nextState = Boolean(event.detail);
-      setIsAudioPlaying(nextState);
-      if (nextState && muted) {
+
+      const detail = event.detail;
+      const playing =
+        typeof detail === "boolean"
+          ? detail
+          : typeof detail?.playing === "boolean"
+          ? detail.playing
+          : false;
+
+      setIsAudioPlaying(playing);
+      if (playing && muted) {
         setMuted(false);
       }
     };
@@ -25,7 +33,8 @@ export default function MuteButton() {
     const newMutedState = !muted;
     setMuted(newMutedState);
 
-    // Call the global mute function
+    if (newMutedState) setIsAudioPlaying(false);
+
     if (typeof (window as any).muteAudio === "function") {
       (window as any).muteAudio(newMutedState);
     }
@@ -37,9 +46,11 @@ export default function MuteButton() {
     <Button
       onClick={toggleMute}
       variant="letu"
+      size="icon"
       className="mt-[1vw] text-[28px] font-bold w-full max-w-[500px] h-14 px-6 py-2"
     >
-      <Icon className="h-12 w-12" aria-hidden />
+      {/* className="h-18 w-18" */}
+      <Icon  aria-hidden />
       {muted ? "Undeafen" : "Deafen"}
     </Button>
   );
