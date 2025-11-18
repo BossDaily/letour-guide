@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
+import { Volume, Volume2, VolumeX } from "lucide-react";
 
 export default function MuteButton() {
   const [muted, setMuted] = useState(true);
@@ -15,17 +16,9 @@ export default function MuteButton() {
       }
     };
 
-    window.addEventListener(
-      "audioPlaybackChange",
-      handlePlaybackChange as EventListener
-    );
-
-    return () => {
-      window.removeEventListener(
-        "audioPlaybackChange",
-        handlePlaybackChange as EventListener
-      );
-    };
+    window.addEventListener("audio:playing-change", handlePlaybackChange);
+    return () =>
+      window.removeEventListener("audio:playing-change", handlePlaybackChange);
   }, [muted]);
 
   const toggleMute = () => {
@@ -38,7 +31,7 @@ export default function MuteButton() {
     }
   };
 
-  
+  const Icon = muted ? VolumeX : isAudioPlaying ? Volume2 : Volume;
 
   return (
     <Button
@@ -46,6 +39,7 @@ export default function MuteButton() {
       variant="letu"
       className="mt-[1vw] text-[28px] font-bold w-full max-w-[500px] h-14 px-6 py-2"
     >
+      <Icon className="h-12 w-12" aria-hidden />
       {muted ? "Undeafen" : "Deafen"}
     </Button>
   );
