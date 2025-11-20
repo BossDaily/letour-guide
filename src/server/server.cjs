@@ -40,14 +40,16 @@ wss.on('connection', (ws) => {
       if (!broadcasters[channel]) {
         broadcasters[channel] = ws;
         console.log(`Client set as broadcaster for channel ${channel}`);
+        ws.send(JSON.stringify({ type: 'joined_as_broadcaster' }));
       } else {
         console.log(`Client joined as listener for channel ${channel}`);
+        ws.send(JSON.stringify({ type: 'broadcaster_exists' }));
       }
     }
     if (type === 'audio' && ws.channel) {
       // Only allow audio from the broadcaster
       if (broadcasters[ws.channel] !== ws) {
-        console.warn('Non-broadcaster tried to send audio, ignoring');
+        console.warn('Broadcaster already exists for this channel, ignoring audio');
         return;
       }
       // Relay audio to all listeners except sender, include all properties

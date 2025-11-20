@@ -12,6 +12,7 @@ export default function BroadcastMic() {
   const [channel, setChannel] = useState("1");
   const [microphoneStream, setMicrophoneStream] = useState<MediaStream | null>(null);
   const [micEnable, setMicEnable] = useState(false);
+  const [isBroadcaster, setIsBroadcaster] = useState(false);
   const wsRef = useRef<WebSocket | null>(null);
   const audioCtxRef = useRef<AudioContext | null>(null);
 
@@ -21,6 +22,7 @@ export default function BroadcastMic() {
     if (wsRef.current) {
       wsRef.current.close();
     }
+    setIsBroadcaster(false); // Reset broadcaster status on channel change
     if (!audioCtxRef.current) {
       audioCtxRef.current = new (window.AudioContext || (window as any).webkitAudioContext)();
     }
@@ -30,7 +32,19 @@ export default function BroadcastMic() {
     ws.onopen = () => {
       ws.send(JSON.stringify({ type: "join", channel }));
     };
-    ws.onmessage = (msg) => { /* no-op */ };
+    ws.onmessage = (msg) => {
+      try {
+        const parsed = JSON.parse(msg.data);
+        if (parsed.type === 'joined_as_broadcaster') {
+          setIsBroadcaster(true);
+        } else if (parsed.type === 'broadcaster_exists') {
+          setIsBroadcaster(false);
+          alert('A broadcaster already exists on this channel. You can only listen.');
+        }
+      } catch (err) {
+        console.error('Failed to parse server message:', err);
+      }
+    };
 
     return () => {
       ws.close();
@@ -98,12 +112,15 @@ export default function BroadcastMic() {
         </select>
       </div>
       <div className="">
-        <Button className="mb-4 mt-2 text-[28px] font-bold w-full max-w-[80vw] h-12 px-6 py-2" variant="letu" onClick={async () => {
-          setMicEnable(!micEnable);
-        }}>
-          {micEnable ? "Stop Mic" : "Start Mic"}
-        </Button>
-
+        {isBroadcaster ? (
+          <Button className="mb-4 mt-2 text-[28px] font-bold w-full max-w-[80vw] h-12 px-6 py-2" variant="letu" onClick={async () => {
+            setMicEnable(!micEnable);
+          }}>
+            {micEnable ? "Stop Mic" : "Start Mic"}
+          </Button>
+        ) : (
+          <p className="mb-4 mt-2 text-[28px] font-bold text-red-500">A broadcaster already exists on this channel. You can only listen.</p>
+        )}
       </div>
     </div>
   );
