@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 
-// MIC WORKS, BUT NOT WELL
+// MIC WORKS, BUT BETTER
 // This is the base url of the page
 const BASE_URL = import.meta.env.BASE_URL || "/";
 // This is the url of the server
@@ -88,6 +88,13 @@ export default function BroadcastMic() {
           <option className="text-base font-bold text-gray-600" value="1">one</option>
           <option className="text-base font-bold text-gray-600" value="2">two</option>
           <option className="text-base font-bold text-gray-600" value="3">three</option>
+          <option className="text-base font-bold text-gray-600" value="4">four</option>
+          <option className="text-base font-bold text-gray-600" value="5">five</option> 
+          <option className="text-base font-bold text-gray-600" value="6">six</option>
+          <option className="text-base font-bold text-gray-600" value="7">seven</option>
+          <option className="text-base font-bold text-gray-600" value="8">eight</option>
+          <option className="text-base font-bold text-gray-600" value="9">nine</option>
+          <option className="text-base font-bold text-gray-600" value="10">ten</option>
         </select>
       </div>
       <div className="">

@@ -110,6 +110,13 @@ export default function ListenAudio() {
           <option className="text-base font-bold text-gray-600" value="1">one</option>
           <option className="text-base font-bold text-gray-600" value="2">two</option>
           <option className="text-base font-bold text-gray-600" value="3">three</option>
+          <option className="text-base font-bold text-gray-600" value="4">four</option>
+          <option className="text-base font-bold text-gray-600" value="5">five</option> 
+          <option className="text-base font-bold text-gray-600" value="6">six</option>
+          <option className="text-base font-bold text-gray-600" value="7">seven</option>
+          <option className="text-base font-bold text-gray-600" value="8">eight</option>
+          <option className="text-base font-bold text-gray-600" value="9">nine</option>
+          <option className="text-base font-bold text-gray-600" value="10">ten</option>
         </select>
       </div>
     </div>
