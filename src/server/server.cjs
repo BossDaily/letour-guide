@@ -5,7 +5,7 @@ const port = 3001;
 const wss = new WebSocket.Server({ port: port });
 
 const channels = {}; // { channelId: Set of sockets }
-
+const broadcasters = {};
 // Heartbeat settings
 const HEARTBEAT_INTERVAL = 30000; // 30 seconds
 function noop() {}
@@ -36,8 +36,20 @@ wss.on('connection', (ws) => {
       ws.channel = channel;
       channels[channel] = channels[channel] || new Set();
       channels[channel].add(ws);
+      // Set as broadcaster if none exists for this channel
+      if (!broadcasters[channel]) {
+        broadcasters[channel] = ws;
+        console.log(`Client set as broadcaster for channel ${channel}`);
+      } else {
+        console.log(`Client joined as listener for channel ${channel}`);
+      }
     }
     if (type === 'audio' && ws.channel) {
+      // Only allow audio from the broadcaster
+      if (broadcasters[ws.channel] !== ws) {
+        console.warn('Non-broadcaster tried to send audio, ignoring');
+        return;
+      }
       // Relay audio to all listeners except sender, include all properties
       if (channels[ws.channel]) {
         channels[ws.channel].forEach(client => {
@@ -63,6 +75,11 @@ wss.on('connection', (ws) => {
     if (ws.channel) {
       if (channels[ws.channel]) {
         channels[ws.channel].delete(ws);
+      }
+      // Remove from broadcasters if it was the broadcaster
+      if (broadcasters[ws.channel] === ws) {
+        delete broadcasters[ws.channel];
+        console.log(`Broadcaster for channel ${ws.channel} disconnected`);
       }
     }
   });
