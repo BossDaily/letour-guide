@@ -46,7 +46,7 @@ export default function MuteButton() {
       className="mt-[1vw] text-[28px] font-bold w-full max-w-[500px] h-14 px-6 py-2"
     >
       <span className="flex items-center justify-center gap-3">
-        <Icon className="h-12 w-12" aria-hidden />
+        <Icon className="size-8" aria-hidden />
         {muted ? "Undeafen" : "Deafen"}
       </span>
     </Button>
