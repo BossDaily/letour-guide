@@ -1,5 +1,5 @@
 //TODO:
-//  Switch audio packets to arrayBuffer and then int16
+//  Switch audio packets to arrayBuffer and then int16 - DONE
 //  Update UI in broadcastMic so that it gives an alert if it failed to get
 //    the lock due to another broadcaster having it
 //  Refactor and simplify like crazy
@@ -59,7 +59,45 @@ export const GET = (ctx) => {
 
   socket.onmessage = (event) => {
     console.log('\x1b[36m Web Server: received message \x1b[0m');
-    
+
+    // If a binary ArrayBuffer arrives, treat it as audio frames
+    if (event.data && !(typeof event.data === 'string')) {
+      // Ensure socket has a channel
+      if (!socket.channel) return;
+
+      console.log('\x1b[34m Web Server: received binary audio frame \x1b[0m');
+
+      // Only allow audio from the current lock owner
+      const lock = locks[socket.channel];
+      if (!lock || lock.ownerSocket !== socket) {
+        if (socket.readyState === WebSocket.OPEN) {
+          socket.send(JSON.stringify({ type: 'audio_ignored', reason: 'no_lock', channel: socket.channel }));
+        }
+        return;
+      }
+
+      // update last active timestamp and reset inactivity timer
+      lock.lastActive = Date.now();
+      if (lock.timeoutHandle) clearTimeout(lock.timeoutHandle);
+      lock.timeoutHandle = setTimeout(() => releaseLock(socket.channel, 'inactivity'), INACTIVITY_TIMEOUT_MS);
+
+      // Relay raw binary audio buffer to other clients on the same channel
+      if (channels[socket.channel]) {
+        channels[socket.channel].forEach(client => {
+          if (client !== socket && client.readyState === WebSocket.OPEN) {
+            try {
+              client.send(event.data);
+            } catch (e) {
+              // ignore send errors per-client
+            }
+          }
+        });
+      }
+
+      return;
+    }
+
+    // otherwise assume text control message and parse as JSON
     let parsed;
     try {
       parsed = JSON.parse(event.data);
@@ -115,32 +153,7 @@ export const GET = (ctx) => {
       }
     }
 
-    if (type === 'audio' && socket.channel) {
-      console.log('\x1b[34m Web Server: received audio \x1b[0m');
-      // Only allow audio from the current lock owner
-      const lock = locks[socket.channel];
-      if (!lock || lock.ownerSocket !== socket) {
-        // not owner - ignore the audio and optionally notify
-        if (socket.readyState === WebSocket.OPEN) {
-          socket.send(JSON.stringify({ type: 'audio_ignored', reason: 'no_lock', channel: socket.channel }));
-        }
-        return;
-      }
-
-      // update last active timestamp and reset inactivity timer
-      lock.lastActive = Date.now();
-      if (lock.timeoutHandle) clearTimeout(lock.timeoutHandle);
-      lock.timeoutHandle = setTimeout(() => releaseLock(socket.channel, 'inactivity'), INACTIVITY_TIMEOUT_MS);
-
-      // Relay audio to all listeners except sender, include all properties
-      if (channels[socket.channel]) {
-        channels[socket.channel].forEach(client => {
-          if (client !== socket && client.readyState === WebSocket.OPEN) {
-            client.send(JSON.stringify({ type: 'audio', data, sampleRate: parsed.sampleRate }));
-          }
-        });
-      }
-    }
+    // (text 'audio' messages not used anymore)
   };
 
   // Handle connection close

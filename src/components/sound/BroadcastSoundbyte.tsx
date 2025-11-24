@@ -28,6 +28,8 @@ export default function BroadcastSoundbyte() {
       audioCtxRef.current = new (window.AudioContext || (window as any).webkitAudioContext)();
     }
     const ws = new WebSocket(WS_URL);
+    // receive binary as ArrayBuffer
+    ws.binaryType = 'arraybuffer';
     wsRef.current = ws;
 
     ws.onopen = () => {
@@ -47,9 +49,19 @@ export default function BroadcastSoundbyte() {
                 const response = await fetch(BASE_URL + FILE);
                 const arrayBuffer = await response.arrayBuffer();
                 const audioBuffer = await audioCtxRef.current!.decodeAudioData(arrayBuffer);
-                const samples = audioBuffer.getChannelData(0);
-                if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
-                  wsRef.current.send(JSON.stringify({ type: 'audio', channel: channel, data: Array.from(samples) }));
+                // Send audio as binary: header (sampleRate uint32 LE) + Float32 samples
+                try {
+                  const samples = audioBuffer.getChannelData(0);
+                  const headerBytes = 4;
+                  const buffer = new ArrayBuffer(headerBytes + samples.byteLength);
+                  const view = new DataView(buffer);
+                  view.setUint32(0, audioCtxRef.current!.sampleRate, true);
+                  new Float32Array(buffer, headerBytes).set(samples);
+                  if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
+                    wsRef.current.send(buffer);
+                  }
+                } catch (err) {
+                  console.error('Error sending queued soundbyte:', err);
                 }
               } catch (err) {
                 console.error('Error sending queued soundbyte:', err);
@@ -103,8 +115,14 @@ export default function BroadcastSoundbyte() {
             const response = await fetch(BASE_URL + FILE);
             const arrayBuffer = await response.arrayBuffer();
             const audioBuffer = await audioCtxRef.current!.decodeAudioData(arrayBuffer);
+            // send as binary with sampleRate header
             const samples = audioBuffer.getChannelData(0);
-            wsRef.current.send(JSON.stringify({ type: 'audio', channel: channel, data: Array.from(samples) }));
+            const headerBytes = 4;
+            const buffer = new ArrayBuffer(headerBytes + samples.byteLength);
+            const view = new DataView(buffer);
+            view.setUint32(0, audioCtxRef.current!.sampleRate, true);
+            new Float32Array(buffer, headerBytes).set(samples);
+            wsRef.current.send(buffer);
           }
         }}>
           Play!

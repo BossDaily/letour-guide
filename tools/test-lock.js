@@ -38,11 +38,18 @@ function makeClient(name) {
 
   await new Promise(r => setTimeout(r, 500));
 
-  // A sends audio (owner) - should appear to the channel
-  a.send(JSON.stringify({ type: 'audio', channel: '1', data: [0,0,0] }));
+  // A sends a small audio frame (owner) - should appear to the channel
+  const headerBytes = 4;
+  const payloadA = Buffer.alloc(headerBytes + 3 * 4); // three floats -> 3*4 bytes
+  payloadA.writeUInt32LE(48000, 0); // sampleRate
+  Buffer.from(new Float32Array([0,0,0]).buffer).copy(payloadA, headerBytes);
+  a.send(payloadA);
 
   // B attempts to send audio (not owner) - server will ignore
-  b.send(JSON.stringify({ type: 'audio', channel: '1', data: [1,1,1] }));
+  const payloadB = Buffer.alloc(headerBytes + 3 * 4);
+  payloadB.writeUInt32LE(48000, 0);
+  Buffer.from(new Float32Array([1,1,1]).buffer).copy(payloadB, headerBytes);
+  b.send(payloadB);
 
   // Wait a bit to observe inactivity-based release
   console.log('Waiting to observe inactivity auto-release (>=7s)');

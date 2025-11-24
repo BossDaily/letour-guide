@@ -16,46 +16,42 @@ wss.on('connection', (ws) => {
   ws.on('pong', heartbeat);
   console.log("Websocket server is connected to!")
   ws.on('message', (msg) => {
-    console.log('received audio');
-    // Expect JSON: { type, channel, data }
-    let parsed;
+    // msg can be a string (control) or Buffer/ArrayBuffer (binary audio)
     try {
-      // Ensure message is not too large (buffer size management)
-      if (typeof msg === 'string' && msg.length > 1024 * 1024) { // 1MB limit
+      // Binary payload => forward directly to other clients
+      if (typeof msg !== 'string') {
+        if (ws.channel && channels[ws.channel]) {
+          channels[ws.channel].forEach(client => {
+            if (client !== ws && client.readyState === WebSocket.OPEN) {
+              try {
+                client.send(msg);
+              } catch (err) {
+                // ignore per-client send errors
+              }
+            }
+          });
+        }
+        return;
+      }
+
+      // Otherwise, handle text-based control messages
+      console.log('received text message');
+      // Ensure message is not too large
+      if (msg.length > 1024 * 1024) { // 1MB limit
         console.warn('Message too large, ignoring');
         return;
       }
-      parsed = JSON.parse(msg);
-    } catch (err) {
-      console.error('Failed to parse message:', err);
-      return;
-    }
-    const { type, channel, data } = parsed;
+      var parsed = JSON.parse(msg);
+      const { type, channel, data } = parsed;
 
     if (type === 'join') {
       ws.channel = channel;
       channels[channel] = channels[channel] || new Set();
       channels[channel].add(ws);
     }
-    if (type === 'audio' && ws.channel) {
-      // Relay audio to all listeners except sender, include all properties
-      if (channels[ws.channel]) {
-        channels[ws.channel].forEach(client => {
-          if (client !== ws && client.readyState === WebSocket.OPEN) {
-            try {
-              // Send as Buffer for binary encoding optimization
-              const audioMsg = JSON.stringify({
-                type: 'audio',
-                data,
-                sampleRate: parsed.sampleRate // forward sampleRate
-              });
-              client.send(Buffer.from(audioMsg), { binary: true });
-            } catch (err) {
-              console.error('Error sending audio to client:', err);
-            }
-          }
-        });
-      }
+    // 'audio' text messages are deprecated — binary frames are used instead
+    } catch (err) {
+      console.error('Error handling message:', err);
     }
   }); // End ws.on('message')
 

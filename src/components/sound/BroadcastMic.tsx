@@ -27,6 +27,8 @@ export default function BroadcastMic() {
       audioCtxRef.current = new (window.AudioContext || (window as any).webkitAudioContext)();
     }
     const ws = new WebSocket(WS_URL);
+    // ensure binary messages are received as ArrayBuffer
+    ws.binaryType = 'arraybuffer';
     wsRef.current = ws;
 
     ws.onopen = () => {
@@ -92,15 +94,23 @@ export default function BroadcastMic() {
         //create a mic that we can listen to
         const micNode = new AudioWorkletNode(audioCtx, 'mic-processor');
         micNode.port.onmessage = (event) => {
-          const inputDataArray = Array.from(event.data);
-          // Send audio data to server
-          if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
-            wsRef.current.send(JSON.stringify({ 
-              type: 'audio', 
-              channel: channel, 
-              data: inputDataArray ,
-              sampleRate: audioCtxRef.current!.sampleRate
-            }));
+          // event.data is a plain Array of float samples from the worklet.
+          // Pack as binary: 4 bytes sampleRate (Uint32 LE) + Float32 samples.
+          try {
+            const floatSamples = Float32Array.from(event.data as Iterable<number>);
+            const headerBytes = 4; // 32-bit sampleRate
+            const buffer = new ArrayBuffer(headerBytes + floatSamples.byteLength);
+            const view = new DataView(buffer);
+            // write sampleRate at start (little-endian)
+            view.setUint32(0, audioCtxRef.current!.sampleRate, true);
+            // copy float samples into buffer after header
+            new Float32Array(buffer, headerBytes).set(floatSamples);
+
+            if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
+              wsRef.current.send(buffer);
+            }
+          } catch (err) {
+            console.error('Failed to send audio buffer', err);
           }
         };
         source.connect(micNode).connect(audioCtx.destination);
