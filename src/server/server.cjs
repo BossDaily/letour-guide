@@ -13,9 +13,13 @@ function heartbeat() { this.isAlive = true; }
 
 wss.on('connection', (ws) => {
   ws.isAlive = true;
+  // application-level last-seen timestamp for idle detection
+  ws._lastSeen = Date.now();
   ws.on('pong', heartbeat);
   console.log("Websocket server is connected to!")
   ws.on('message', (msg) => {
+    // update application-level last-seen
+    try { ws._lastSeen = Date.now(); } catch (e) {}
     // msg can be a string (control) or Buffer/ArrayBuffer (binary audio)
     try {
       // Binary payload => forward directly to other clients
@@ -43,6 +47,10 @@ wss.on('connection', (ws) => {
       }
       var parsed = JSON.parse(msg);
       const { type, channel, data } = parsed;
+      // capture role if provided so we can treat listeners differently
+      if (type === 'join') {
+        ws.role = parsed.role || 'listener';
+      }
 
     if (type === 'join') {
       ws.channel = channel;
@@ -54,6 +62,23 @@ wss.on('connection', (ws) => {
       console.error('Error handling message:', err);
     }
   }); // End ws.on('message')
+
+  // Periodically close listeners that have been idle at the application level
+  const LISTENER_INACTIVITY_MS = 30000; // 30s
+  const LISTENER_CHECK_MS = 5000;
+  if (!global.__listenerCleanupInterval) {
+    global.__listenerCleanupInterval = setInterval(() => {
+      wss.clients.forEach((client) => {
+        try {
+          const role = client.role || 'listener';
+          const last = client._lastSeen || 0;
+          if (role === 'listener' && Date.now() - last > LISTENER_INACTIVITY_MS) {
+            try { client.terminate(); } catch (e) {}
+          }
+        } catch (e) {}
+      });
+    }, LISTENER_CHECK_MS);
+  }
 
   ws.on('close', () => {
     if (ws.channel) {

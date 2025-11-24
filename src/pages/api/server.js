@@ -3,6 +3,8 @@
 //  Update UI in broadcastMic so that it gives an alert if it failed to get
 //    the lock due to another broadcaster having it
 //  Refactor and simplify like crazy
+//  Add UI to show if the listen page is inactive
+//  Add UI to show if the broadcast page doesn't have the lock
 
 /**
  * @type {import('astro').APIRoute}
@@ -27,8 +29,11 @@ export const GET = (ctx) => {
   const channels = globalThis.wsChannels;
   const locks = globalThis.wsLocks;
 
-  // lock timeout (ms) used to auto-release on inactivity
-  const INACTIVITY_TIMEOUT_MS = 7000;
+  // lock timeout (ms) used to auto-release on inactivity (10 seconds)
+  const INACTIVITY_TIMEOUT_MS = 10000;
+  // listener inactivity timeout and cleanup check
+  const LISTENER_INACTIVITY_MS = 30000; // 30s before server kicks an inactive listener
+  const LISTENER_CLEANUP_CHECK_MS = 5000; // how often to scan for dead listeners
 
   function broadcastToChannel(channelId, payload) {
     if (channels[channelId]) {
@@ -56,9 +61,13 @@ export const GET = (ctx) => {
   // Handle incoming messages
   // assign an id for this socket so locks can be tracked reliably
   socket._id = Math.random().toString(36).slice(2, 9);
+  // track when we last heard from this client (join/heartbeat/messages)
+  socket.lastSeen = Date.now();
 
   socket.onmessage = (event) => {
-    console.log('\x1b[36m Web Server: received message \x1b[0m');
+    //console.log('\x1b[36m Web Server: received message \x1b[0m');
+    // update last seen for this socket
+    socket.lastSeen = Date.now();
 
     // If a binary ArrayBuffer arrives, treat it as audio frames
     if (event.data && !(typeof event.data === 'string')) {
@@ -101,6 +110,7 @@ export const GET = (ctx) => {
     let parsed;
     try {
       parsed = JSON.parse(event.data);
+      console.log('received json control message');
     } catch {
       return;
     }
@@ -115,6 +125,9 @@ export const GET = (ctx) => {
       console.log(`\x1b[32m Client joined channel: ${channel} as ${socket.role} (id=${socket._id}) \x1b[0m`);
 
       // If a broadcaster joins, attempt to grant the lock
+      // set lastSeen and role (used by cleanup logic)
+      socket.lastSeen = Date.now();
+      socket.role = socket.role || role || 'listener';
       if (socket.role === 'broadcaster') {
         const lock = locks[channel];
         if (!lock) {
@@ -153,8 +166,39 @@ export const GET = (ctx) => {
       }
     }
 
-    // (text 'audio' messages not used anymore)
+    // lightweight heartbeat message from clients (listeners) to keep session alive
+    if (type === 'heartbeat') {
+      // nothing to do beyond updating lastSeen above
+      return;
+    }
   };
+
+  // Schedule a single global cleanup interval to remove inactive listeners
+  if (!globalThis.wsListenerCleanupInterval) {
+    globalThis.wsListenerCleanupInterval = setInterval(() => {
+      try {
+        const now = Date.now();
+        Object.keys(channels).forEach(channelId => {
+          channels[channelId].forEach(client => {
+            try {
+              const isListener = client.role === 'listener' || !client.role;
+              if (isListener) {
+                const last = client.lastSeen || 0;
+                if (now - last > LISTENER_INACTIVITY_MS) {
+                  console.log(`\x1b[90m Kicking inactive listener ${client._id} from channel ${channelId} (idle ${Math.round((now-last)/1000)}s) \x1b[0m`);
+                  try { client.close(); } catch (e) {}
+                }
+              }
+            } catch (e) {
+              // continue
+            }
+          });
+        });
+      } catch (err) {
+        // ignore
+      }
+    }, LISTENER_CLEANUP_CHECK_MS);
+  }
 
   // Handle connection close
   socket.onclose = () => {

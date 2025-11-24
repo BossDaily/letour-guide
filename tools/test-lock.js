@@ -52,8 +52,8 @@ function makeClient(name) {
   b.send(payloadB);
 
   // Wait a bit to observe inactivity-based release
-  console.log('Waiting to observe inactivity auto-release (>=7s)');
-  await new Promise(r => setTimeout(r, 9000));
+  console.log('Waiting to observe inactivity auto-release (>=10s)');
+  await new Promise(r => setTimeout(r, 11000));
 
   // Now B tries again and should be able to acquire lock after A inactive
   b.send(JSON.stringify({ type: 'join', channel: '1', role: 'broadcaster' }));

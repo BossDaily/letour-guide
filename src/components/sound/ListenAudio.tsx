@@ -32,6 +32,16 @@ export default function ListenAudio() {
     ws.onopen = () => {
       // tell server we are a listener for this channel
       ws.send(JSON.stringify({ type: "join", channel, role: 'listener' }));
+      // start a lightweight application-level heartbeat so server can detect and close
+      // truly inactive pages. Heartbeat interval only for listeners.
+      const HEARTBEAT_MS = 10000; // send heartbeat every 10s
+      const hb = setInterval(() => {
+        if (ws.readyState === WebSocket.OPEN) {
+          try { ws.send(JSON.stringify({ type: 'heartbeat' })); } catch (e) { /* ignore */ }
+        }
+      }, HEARTBEAT_MS);
+      // store on websocket so it can be cleared on disconnect
+      (ws as any)._heartbeatInterval = hb;
     };
 
     ws.onmessage = (msg) => {
@@ -89,6 +99,8 @@ export default function ListenAudio() {
     };
 
     return () => {
+      // clear heartbeat interval if present and close
+      try { clearInterval((ws as any)._heartbeatInterval); } catch (e) {}
       ws.close();
     };
   }, [channel]);

@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 
-// MIC WORKS, BUT BETTER
+// MIC WORKS AS INT16 DATA TYPE
 // This is the base url of the page
 const BASE_URL = import.meta.env.BASE_URL || "/";
 // This is the url of the server
