@@ -1,7 +1,7 @@
 //TODO:
 //  Switch audio packets to arrayBuffer and then int16 - DONE
 //  Update UI in broadcastMic so that it gives an alert if it failed to get
-//    the lock due to another broadcaster having it
+//    the lock due to another broadcaster having it - DONE
 //  Refactor and simplify like crazy
 
 /**
