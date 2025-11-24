@@ -3,8 +3,6 @@
 //  Update UI in broadcastMic so that it gives an alert if it failed to get
 //    the lock due to another broadcaster having it
 //  Refactor and simplify like crazy
-//  Add UI to show if the listen page is inactive
-//  Add UI to show if the broadcast page doesn't have the lock
 
 /**
  * @type {import('astro').APIRoute}
@@ -168,7 +166,16 @@ export const GET = (ctx) => {
 
     // lightweight heartbeat message from clients (listeners) to keep session alive
     if (type === 'heartbeat') {
-      // nothing to do beyond updating lastSeen above
+      // nothing to do beyond updating lastSeen above for listeners
+      // For broadcasters, treat heartbeat as activity and refresh their lock timeout
+      if (socket.role === 'broadcaster' && socket.channel) {
+        const lock = locks[socket.channel];
+        if (lock && lock.ownerSocket === socket) {
+          lock.lastActive = Date.now();
+          if (lock.timeoutHandle) clearTimeout(lock.timeoutHandle);
+          lock.timeoutHandle = setTimeout(() => releaseLock(socket.channel, 'inactivity'), INACTIVITY_TIMEOUT_MS);
+        }
+      }
       return;
     }
   };

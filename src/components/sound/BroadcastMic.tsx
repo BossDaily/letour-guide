@@ -126,6 +126,21 @@ export default function BroadcastMic() {
     } //end if micEnable
   }, [micEnable]);
 
+  // Send a lightweight heartbeat while we own the lock to prevent accidental release
+  useEffect(() => {
+    let hb: any = null;
+    if (hasLock && wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
+      const HEARTBEAT_MS = 5000; // 5s — keeps lock alive even during silence
+      hb = setInterval(() => {
+        try { wsRef.current?.send(JSON.stringify({ type: 'heartbeat' })); } catch (e) { /* ignore */ }
+      }, HEARTBEAT_MS);
+    }
+
+    return () => {
+      if (hb) clearInterval(hb);
+    };
+  }, [hasLock]);
+
   return (
     <div>
       <div className="">
@@ -150,7 +165,12 @@ export default function BroadcastMic() {
         </select>
       </div>
       <div className="">
-        <Button className="mb-4 mt-2 text-[28px] font-bold w-full max-w-[80vw] h-12 px-6 py-2" variant="letu" onClick={async () => {
+        <Button
+          className={
+            `mb-4 mt-2 text-[28px] font-bold w-full max-w-[80vw] h-12 px-6 py-2 ${!hasLock ? 'opacity-70 filter grayscale' : ''}`
+          }
+          variant="letu"
+                onClick={async () => {
           // If enabling, and we don't have the lock, request it and set pending
           if (!micEnable && !hasLock) {
             setPendingStartMic(true);
@@ -162,7 +182,7 @@ export default function BroadcastMic() {
 
           setMicEnable(!micEnable);
         }}>
-          {micEnable ? "Stop Mic" : "Start Mic"}
+          {hasLock ? (micEnable ? "Stop Mic" : "Start Mic") : "[No broadcast privileges]"}
         </Button>
 
       </div>
