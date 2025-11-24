@@ -1,3 +1,8 @@
+//TODO:
+//  Switch audio packets to arrayBuffer and then int16
+//  Update UI in broadcastMic so that it shows if you don't have the lock
+//  Refactor and simplify like crazy
+
 /**
  * @type {import('astro').APIRoute}
  */
