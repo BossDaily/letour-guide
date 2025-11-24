@@ -28,7 +28,8 @@ export default function ListenAudio() {
     wsRef.current = ws;
 
     ws.onopen = () => {
-      ws.send(JSON.stringify({ type: "join", channel }));
+      // tell server we are a listener for this channel
+      ws.send(JSON.stringify({ type: "join", channel, role: 'listener' }));
     };
 
     ws.onmessage = (msg) => {

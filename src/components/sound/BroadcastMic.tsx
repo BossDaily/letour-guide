@@ -12,6 +12,8 @@ export default function BroadcastMic() {
   const [channel, setChannel] = useState("1");
   const [microphoneStream, setMicrophoneStream] = useState<MediaStream | null>(null);
   const [micEnable, setMicEnable] = useState(false);
+  const [hasLock, setHasLock] = useState(false);
+  const [pendingStartMic, setPendingStartMic] = useState(false);
   const wsRef = useRef<WebSocket | null>(null);
   const audioCtxRef = useRef<AudioContext | null>(null);
 
@@ -28,9 +30,37 @@ export default function BroadcastMic() {
     wsRef.current = ws;
 
     ws.onopen = () => {
-      ws.send(JSON.stringify({ type: "join", channel }));
+      // announce intent to be a broadcaster so server can grant a per-channel lock
+      ws.send(JSON.stringify({ type: "join", channel, role: 'broadcaster' }));
     };
-    ws.onmessage = (msg) => { /* no-op */ };
+    ws.onmessage = (msg) => {
+      try {
+        const parsed = JSON.parse(msg.data);
+        if (parsed.type === 'lock_granted' && parsed.channel === channel) {
+          setHasLock(true);
+          if (pendingStartMic) {
+            setPendingStartMic(false);
+            setMicEnable(true);
+          }
+        }
+        if (parsed.type === 'lock_denied' && parsed.channel === channel) {
+          setHasLock(false);
+          setPendingStartMic(false);
+        }
+        if (parsed.type === 'lock_released' && parsed.channel === channel) {
+          // if our lock was released, stop the mic
+          setHasLock(false);
+          setMicEnable(false);
+        }
+        if (parsed.type === 'lock_owner' && parsed.channel === channel && parsed.ownerId) {
+          // update hasLock flag if the owner isn't us
+          // lock_granted will have set ours true earlier; if owner changed away, force false
+          // no explicit client id in this app, so rely on lock_granted/denied
+        }
+      } catch (err) {
+        // ignore
+      }
+    };
 
     return () => {
       ws.close();
@@ -40,6 +70,18 @@ export default function BroadcastMic() {
   //useEffect to start/stop mic when micEnable changes
   useEffect(() => {
     if (micEnable) {
+      // ensure we actually hold the lock before enabling mic
+      if (!hasLock) {
+        // Try to request the lock explicitly
+        if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
+          wsRef.current.send(JSON.stringify({ type: 'join', channel, role: 'broadcaster' }));
+        }
+        // if lock not granted, don't start mic
+        if (!hasLock) {
+          setMicEnable(false);
+          return;
+        }
+      }
       // Start mic
       navigator.mediaDevices.getUserMedia({ audio: true }).then(async stream => {
         setMicrophoneStream(stream);
@@ -99,6 +141,15 @@ export default function BroadcastMic() {
       </div>
       <div className="">
         <Button className="mb-4 mt-2 text-[28px] font-bold w-full max-w-[80vw] h-12 px-6 py-2" variant="letu" onClick={async () => {
+          // If enabling, and we don't have the lock, request it and set pending
+          if (!micEnable && !hasLock) {
+            setPendingStartMic(true);
+            if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
+              wsRef.current.send(JSON.stringify({ type: 'join', channel, role: 'broadcaster' }));
+            }
+            return;
+          }
+
           setMicEnable(!micEnable);
         }}>
           {micEnable ? "Stop Mic" : "Start Mic"}
