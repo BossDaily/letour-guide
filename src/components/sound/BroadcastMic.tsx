@@ -23,7 +23,6 @@ export default function BroadcastMic() {
     if (wsRef.current) {
       wsRef.current.close();
     }
-    setIsBroadcaster(false); // Reset broadcaster status on channel change
     if (!audioCtxRef.current) {
       audioCtxRef.current = new (window.AudioContext || (window as any).webkitAudioContext)();
     }
