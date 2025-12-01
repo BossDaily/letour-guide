@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 
-// MIC WORKS, BUT BETTER
+// MIC WORKS AS INT16 DATA TYPE
 // This is the base url of the page
 const BASE_URL = import.meta.env.BASE_URL || "/";
 // This is the url of the server
@@ -12,7 +12,8 @@ export default function BroadcastMic() {
   const [channel, setChannel] = useState("1");
   const [microphoneStream, setMicrophoneStream] = useState<MediaStream | null>(null);
   const [micEnable, setMicEnable] = useState(false);
-  const [isBroadcaster, setIsBroadcaster] = useState(false);
+  const [hasLock, setHasLock] = useState(false);
+  const [pendingStartMic, setPendingStartMic] = useState(false);
   const wsRef = useRef<WebSocket | null>(null);
   const audioCtxRef = useRef<AudioContext | null>(null);
 
@@ -27,22 +28,40 @@ export default function BroadcastMic() {
       audioCtxRef.current = new (window.AudioContext || (window as any).webkitAudioContext)();
     }
     const ws = new WebSocket(WS_URL);
+    // ensure binary messages are received as ArrayBuffer
+    ws.binaryType = 'arraybuffer';
     wsRef.current = ws;
 
     ws.onopen = () => {
-      ws.send(JSON.stringify({ type: "join", channel }));
+      // announce intent to be a broadcaster so server can grant a per-channel lock
+      ws.send(JSON.stringify({ type: "join", channel, role: 'broadcaster' }));
     };
     ws.onmessage = (msg) => {
       try {
         const parsed = JSON.parse(msg.data);
-        if (parsed.type === 'joined_as_broadcaster') {
-          setIsBroadcaster(true);
-        } else if (parsed.type === 'broadcaster_exists') {
-          setIsBroadcaster(false);
-          alert('A broadcaster already exists on this channel. You can only listen.');
+        if (parsed.type === 'lock_granted' && parsed.channel === channel) {
+          setHasLock(true);
+          if (pendingStartMic) {
+            setPendingStartMic(false);
+            setMicEnable(true);
+          }
+        }
+        if (parsed.type === 'lock_denied' && parsed.channel === channel) {
+          setHasLock(false);
+          setPendingStartMic(false);
+        }
+        if (parsed.type === 'lock_released' && parsed.channel === channel) {
+          // if our lock was released, stop the mic
+          setHasLock(false);
+          setMicEnable(false);
+        }
+        if (parsed.type === 'lock_owner' && parsed.channel === channel && parsed.ownerId) {
+          // update hasLock flag if the owner isn't us
+          // lock_granted will have set ours true earlier; if owner changed away, force false
+          // no explicit client id in this app, so rely on lock_granted/denied
         }
       } catch (err) {
-        console.error('Failed to parse server message:', err);
+        // ignore
       }
     };
 
@@ -54,6 +73,18 @@ export default function BroadcastMic() {
   //useEffect to start/stop mic when micEnable changes
   useEffect(() => {
     if (micEnable) {
+      // ensure we actually hold the lock before enabling mic
+      if (!hasLock) {
+        // Try to request the lock explicitly
+        if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
+          wsRef.current.send(JSON.stringify({ type: 'join', channel, role: 'broadcaster' }));
+        }
+        // if lock not granted, don't start mic
+        if (!hasLock) {
+          setMicEnable(false);
+          return;
+        }
+      }
       // Start mic
       navigator.mediaDevices.getUserMedia({ audio: true }).then(async stream => {
         setMicrophoneStream(stream);
@@ -64,15 +95,23 @@ export default function BroadcastMic() {
         //create a mic that we can listen to
         const micNode = new AudioWorkletNode(audioCtx, 'mic-processor');
         micNode.port.onmessage = (event) => {
-          const inputDataArray = Array.from(event.data);
-          // Send audio data to server
-          if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
-            wsRef.current.send(JSON.stringify({ 
-              type: 'audio', 
-              channel: channel, 
-              data: inputDataArray ,
-              sampleRate: audioCtxRef.current!.sampleRate
-            }));
+          // event.data is a plain Array of float samples from the worklet.
+          // Pack as binary: 4 bytes sampleRate (Uint32 LE) + Float32 samples.
+          try {
+            const floatSamples = Float32Array.from(event.data as Iterable<number>);
+            const headerBytes = 4; // 32-bit sampleRate
+            const buffer = new ArrayBuffer(headerBytes + floatSamples.byteLength);
+            const view = new DataView(buffer);
+            // write sampleRate at start (little-endian)
+            view.setUint32(0, audioCtxRef.current!.sampleRate, true);
+            // copy float samples into buffer after header
+            new Float32Array(buffer, headerBytes).set(floatSamples);
+
+            if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
+              wsRef.current.send(buffer);
+            }
+          } catch (err) {
+            console.error('Failed to send audio buffer', err);
           }
         };
         source.connect(micNode).connect(audioCtx.destination);
@@ -87,6 +126,21 @@ export default function BroadcastMic() {
       }
     } //end if micEnable
   }, [micEnable]);
+
+  // Send a lightweight heartbeat while we own the lock to prevent accidental release
+  useEffect(() => {
+    let hb: any = null;
+    if (hasLock && wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
+      const HEARTBEAT_MS = 5000; // 5s — keeps lock alive even during silence
+      hb = setInterval(() => {
+        try { wsRef.current?.send(JSON.stringify({ type: 'heartbeat' })); } catch (e) { /* ignore */ }
+      }, HEARTBEAT_MS);
+    }
+
+    return () => {
+      if (hb) clearInterval(hb);
+    };
+  }, [hasLock]);
 
   return (
     <div>
@@ -112,15 +166,26 @@ export default function BroadcastMic() {
         </select>
       </div>
       <div className="">
-        {isBroadcaster ? (
-          <Button className="mb-4 mt-2 text-[28px] font-bold w-full max-w-[80vw] h-12 px-6 py-2" variant="letu" onClick={async () => {
-            setMicEnable(!micEnable);
-          }}>
-            {micEnable ? "Stop Mic" : "Start Mic"}
-          </Button>
-        ) : (
-          <p className="mb-4 mt-2 text-[28px] font-bold text-red-500">A broadcaster already exists on this channel. You can only listen.</p>
-        )}
+        <Button
+          className={
+            `mb-4 mt-2 text-[28px] font-bold w-full max-w-[80vw] h-12 px-6 py-2 ${!hasLock ? 'opacity-70 filter grayscale' : ''}`
+          }
+          variant="letu"
+                onClick={async () => {
+          // If enabling, and we don't have the lock, request it and set pending
+          if (!micEnable && !hasLock) {
+            setPendingStartMic(true);
+            if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
+              wsRef.current.send(JSON.stringify({ type: 'join', channel, role: 'broadcaster' }));
+            }
+            return;
+          }
+
+          setMicEnable(!micEnable);
+        }}>
+          {hasLock ? (micEnable ? "Stop Mic" : "Start Mic") : "[No broadcast privileges]"}
+        </Button>
+
       </div>
     </div>
   );

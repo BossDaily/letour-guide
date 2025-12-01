@@ -16,6 +16,8 @@ export default function BroadcastSoundbyte() {
   const [channel, setChannel] = useState("1");
   const wsRef = useRef<WebSocket | null>(null);
   const audioCtxRef = useRef<AudioContext | null>(null);
+  const [hasLock, setHasLock] = useState(false);
+  const [pendingPlay, setPendingPlay] = useState(false);
 
   useEffect(() => {
     // Clean up previous connection and set up new one when channel is changed
@@ -26,12 +28,58 @@ export default function BroadcastSoundbyte() {
       audioCtxRef.current = new (window.AudioContext || (window as any).webkitAudioContext)();
     }
     const ws = new WebSocket(WS_URL);
+    // receive binary as ArrayBuffer
+    ws.binaryType = 'arraybuffer';
     wsRef.current = ws;
 
     ws.onopen = () => {
-      ws.send(JSON.stringify({ type: "join", channel }));
+      // request broadcaster lock for channel
+      ws.send(JSON.stringify({ type: "join", channel, role: 'broadcaster' }));
     };
-    ws.onmessage = (msg) => { /* no-op */ };
+    ws.onmessage = (msg) => {
+      try {
+        const parsed = JSON.parse(msg.data);
+        if (parsed.type === 'lock_granted' && parsed.channel === channel) {
+          setHasLock(true);
+          if (pendingPlay) {
+            // we were waiting to play until we owned the lock — play now
+            (async () => {
+              setPendingPlay(false);
+              try {
+                const response = await fetch(BASE_URL + FILE);
+                const arrayBuffer = await response.arrayBuffer();
+                const audioBuffer = await audioCtxRef.current!.decodeAudioData(arrayBuffer);
+                // Send audio as binary: header (sampleRate uint32 LE) + Float32 samples
+                try {
+                  const samples = audioBuffer.getChannelData(0);
+                  const headerBytes = 4;
+                  const buffer = new ArrayBuffer(headerBytes + samples.byteLength);
+                  const view = new DataView(buffer);
+                  view.setUint32(0, audioCtxRef.current!.sampleRate, true);
+                  new Float32Array(buffer, headerBytes).set(samples);
+                  if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
+                    wsRef.current.send(buffer);
+                  }
+                } catch (err) {
+                  console.error('Error sending queued soundbyte:', err);
+                }
+              } catch (err) {
+                console.error('Error sending queued soundbyte:', err);
+              }
+            })();
+          }
+        }
+        if (parsed.type === 'lock_denied' && parsed.channel === channel) {
+          setHasLock(false);
+          setPendingPlay(false);
+        }
+        if (parsed.type === 'lock_released' && parsed.channel === channel) {
+          setHasLock(false);
+        }
+      } catch (err) {
+        // ignore
+      }
+    };
 
     return () => {
       ws.close();
@@ -57,12 +105,24 @@ export default function BroadcastSoundbyte() {
       <div>
         <Button className="mb-4 mt-2 text-[28px] font-bold w-full max-w-[80vw] h-12 px-6 py-2" variant="letu" onClick={async () => {
           if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
+            // ensure we have lock, if not try to request and queue
+            if (!hasLock) {
+              setPendingPlay(true);
+              wsRef.current.send(JSON.stringify({ type: 'join', channel, role: 'broadcaster' }));
+              return;
+            }
             // Ensure base ends with a slash
             const response = await fetch(BASE_URL + FILE);
             const arrayBuffer = await response.arrayBuffer();
             const audioBuffer = await audioCtxRef.current!.decodeAudioData(arrayBuffer);
+            // send as binary with sampleRate header
             const samples = audioBuffer.getChannelData(0);
-            wsRef.current.send(JSON.stringify({ type: 'audio', channel: channel, data: Array.from(samples) }));
+            const headerBytes = 4;
+            const buffer = new ArrayBuffer(headerBytes + samples.byteLength);
+            const view = new DataView(buffer);
+            view.setUint32(0, audioCtxRef.current!.sampleRate, true);
+            new Float32Array(buffer, headerBytes).set(samples);
+            wsRef.current.send(buffer);
           }
         }}>
           Play!

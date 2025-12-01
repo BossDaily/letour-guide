@@ -31,8 +31,14 @@ async function streamSoundbyte() {
         ws.close();
         return;
       }
-      const chunk = Array.from(samples.slice(i, i + chunkSize));
-      ws.send(JSON.stringify({ type: 'audio', channel: CHANNEL, data: chunk }));
+      const chunkArr = samples.slice(i, i + chunkSize);
+      // Build binary: 4 bytes sampleRate + Float32 samples
+      const floatSamples = Float32Array.from(chunkArr);
+      const headerBytes = 4;
+      const payload = Buffer.alloc(headerBytes + floatSamples.byteLength);
+      payload.writeUInt32LE(audioData.sampleRate || 44100, 0);
+      Buffer.from(floatSamples.buffer).copy(payload, headerBytes);
+      ws.send(payload);
       i += chunkSize;
     }, 50); // 50ms per chunk
   });

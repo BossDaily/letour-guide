@@ -25,64 +25,82 @@ export default function ListenAudio() {
       gainNodeRef.current.connect(audioCtxRef.current.destination);
     }
     const ws = new WebSocket(WS_URL);
+    // ensure binary messages arrive as ArrayBuffer for easy decoding
+    ws.binaryType = 'arraybuffer';
     wsRef.current = ws;
 
     ws.onopen = () => {
-      ws.send(JSON.stringify({ type: "join", channel }));
+      // tell server we are a listener for this channel
+      ws.send(JSON.stringify({ type: "join", channel, role: 'listener' }));
+      // start a lightweight application-level heartbeat so server can detect and close
+      // truly inactive pages. Heartbeat interval only for listeners.
+      const HEARTBEAT_MS = 10000; // send heartbeat every 10s
+      const hb = setInterval(() => {
+        if (ws.readyState === WebSocket.OPEN) {
+          try { ws.send(JSON.stringify({ type: 'heartbeat' })); } catch (e) { /* ignore */ }
+        }
+      }, HEARTBEAT_MS);
+      // store on websocket so it can be cleared on disconnect
+      (ws as any)._heartbeatInterval = hb;
     };
 
     ws.onmessage = (msg) => {
       try {
-        let parsed;
+        // Binary messages are audio frames: 4 bytes sampleRate (Uint32 LE) + Float32 samples
         if (msg.data instanceof ArrayBuffer) {
-          // Binary message: decode to string then parse JSON
-          const text = new TextDecoder().decode(msg.data);
-          parsed = JSON.parse(text);
-        } else if (typeof msg.data === 'string') {
-          // Text message: parse JSON directly
-          parsed = JSON.parse(msg.data);
-        } else {
-          // Unknown format
-          console.warn('Unknown WebSocket message format', msg.data);
-          return;
-        }
-        const { type, data, sampleRate } = parsed;
-        if (type === "audio" && Array.isArray(data)) {
+          const buf = msg.data;
+          const view = new DataView(buf);
+          const sampleRate = view.getUint32(0, true);
+          const audioBufferBytes = buf.slice(4);
+          const samples = new Float32Array(audioBufferBytes);
+
           const ctx = audioCtxRef.current!;
           const gainNode = gainNodeRef.current!;
-          let buffer;
+
           if (sampleRate && sampleRate !== ctx.sampleRate) {
-            // Resample if needed
-            buffer = ctx.createBuffer(1, data.length, sampleRate);
-            buffer.getChannelData(0).set(data);
-            // Use OfflineAudioContext to resample
-            const offlineCtx = new OfflineAudioContext(1, data.length * ctx.sampleRate / sampleRate, ctx.sampleRate);
-            const source = offlineCtx.createBufferSource();
-            source.buffer = buffer;
-            source.connect(offlineCtx.destination);
+            // Resample using OfflineAudioContext
+            const tmpBuffer = ctx.createBuffer(1, samples.length, sampleRate);
+            tmpBuffer.getChannelData(0).set(samples);
+            const offline = new OfflineAudioContext(1, Math.ceil(samples.length * ctx.sampleRate / sampleRate), ctx.sampleRate);
+            const source = offline.createBufferSource();
+            source.buffer = tmpBuffer;
+            source.connect(offline.destination);
             source.start();
-            offlineCtx.startRendering().then(renderedBuffer => {
+            offline.startRendering().then(rendered => {
               const playSource = ctx.createBufferSource();
-              playSource.buffer = renderedBuffer;
-              playSource.connect(gainNode); // Connect to gain node instead
+              playSource.buffer = rendered;
+              playSource.connect(gainNode);
               playSource.start();
             });
           } else {
             // No resampling needed
-            buffer = ctx.createBuffer(1, data.length, ctx.sampleRate);
-            buffer.getChannelData(0).set(data);
+            const buffer = ctx.createBuffer(1, samples.length, ctx.sampleRate);
+            buffer.getChannelData(0).set(samples);
             const source = ctx.createBufferSource();
             source.buffer = buffer;
-            source.connect(gainNode); // Connect to gain node instead
+            source.connect(gainNode);
             source.start();
           }
-        } 
+          return;
+        }
+
+        // Text messages are control messages (join/lock state)
+        if (typeof msg.data === 'string') {
+          const parsed = JSON.parse(msg.data);
+          // if needed in future, we can handle more control messages here
+          return;
+        }
+
+        // Unknown message format
+        console.warn('Unknown WebSocket message format', msg.data);
       } catch (error) {
         console.error("Error processing audio data:", error);
       }
     };
 
     return () => {
+      // clear heartbeat interval if present and close
+      try { clearInterval((ws as any)._heartbeatInterval); } catch (e) {}
       ws.close();
     };
   }, [channel]);
