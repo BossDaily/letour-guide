@@ -93,8 +93,7 @@ export const GET = (ctx) => {
         channels[socket.channel].forEach(client => {
           if (client !== socket && client.readyState === WebSocket.OPEN) {
             try {
-              //event.int_numusers = channels[socket.channel].length; //Create variable for number of users.
-              //Before sending audio, send number of users:
+              //Before sending audio, send number of users to listening page:
               client.send(JSON.stringify({
                 type: "num_users",
                 count: channels[socket.channel].size
