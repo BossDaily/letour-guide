@@ -1,46 +1,117 @@
-const WebSocket = require('ws');
 
+const WebSocket = require('ws');
 //port
 const port = 3001;
 const wss = new WebSocket.Server({ port: port });
 
 const channels = {}; // { channelId: Set of sockets }
+const broadcasters = {};
+// Heartbeat settings
+const HEARTBEAT_INTERVAL = 30000; // 30 seconds
+function noop() {}
+function heartbeat() { this.isAlive = true; }
 
 wss.on('connection', (ws) => {
+  ws.isAlive = true;
+  // application-level last-seen timestamp for idle detection
+  ws._lastSeen = Date.now();
+  ws.on('pong', heartbeat);
   console.log("Websocket server is connected to!")
   ws.on('message', (msg) => {
-    console.log('received audio');
-    // Expect JSON: { type, channel, data }
-    let parsed;
-    try { parsed = JSON.parse(msg); } catch { return; }
-    const { type, channel, data } = parsed;
+    // update application-level last-seen
+    try { ws._lastSeen = Date.now(); } catch (e) {}
+    // msg can be a string (control) or Buffer/ArrayBuffer (binary audio)
+    try {
+      // Binary payload => forward directly to other clients
+      if (typeof msg !== 'string') {
+        if (ws.channel && channels[ws.channel]) {
+          channels[ws.channel].forEach(client => {
+            if (client !== ws && client.readyState === WebSocket.OPEN) {
+              try {
+                client.send(msg);
+              } catch (err) {
+                // ignore per-client send errors
+              }
+            }
+          });
+        }
+        return;
+      }
+
+      // Otherwise, handle text-based control messages
+      console.log('received text message');
+      // Ensure message is not too large
+      if (msg.length > 1024 * 1024) { // 1MB limit
+        console.warn('Message too large, ignoring');
+        return;
+      }
+      var parsed = JSON.parse(msg);
+      const { type, channel, data } = parsed;
+      // capture role if provided so we can treat listeners differently
+      if (type === 'join') {
+        ws.role = parsed.role || 'listener';
+      }
 
     if (type === 'join') {
       ws.channel = channel;
       channels[channel] = channels[channel] || new Set();
       channels[channel].add(ws);
-    }
-    if (type === 'audio' && ws.channel) {
-      // Relay audio to all listeners except sender, include all properties
-      if (channels[ws.channel]) {
-        channels[ws.channel].forEach(client => {
-          if (client !== ws && client.readyState === WebSocket.OPEN) {
-            client.send(JSON.stringify({
-              type: 'audio',
-              data,
-              sampleRate: parsed.sampleRate // forward sampleRate
-            }));
-          }
-        });
+      // Set as broadcaster if none exists for this channel
+      if (!broadcasters[channel]) {
+        broadcasters[channel] = ws;
+        console.log(`Client set as broadcaster for channel ${channel}`);
+        ws.send(JSON.stringify({ type: 'joined_as_broadcaster' }));
+      } else {
+        console.log(`Client joined as listener for channel ${channel}`);
+        ws.send(JSON.stringify({ type: 'broadcaster_exists' }));
       }
     }
-  });
+    // 'audio' text messages are deprecated — binary frames are used instead
+    } catch (err) {
+      console.error('Error handling message:', err);
+    }
+  }); // End ws.on('message')
+
+  // Periodically close listeners that have been idle at the application level
+  const LISTENER_INACTIVITY_MS = 30000; // 30s
+  const LISTENER_CHECK_MS = 5000;
+  if (!global.__listenerCleanupInterval) {
+    global.__listenerCleanupInterval = setInterval(() => {
+      wss.clients.forEach((client) => {
+        try {
+          const role = client.role || 'listener';
+          const last = client._lastSeen || 0;
+          if (role === 'listener' && Date.now() - last > LISTENER_INACTIVITY_MS) {
+            try { client.terminate(); } catch (e) {}
+          }
+        } catch (e) {}
+      });
+    }, LISTENER_CHECK_MS);
+  }
 
   ws.on('close', () => {
     if (ws.channel) {
       if (channels[ws.channel]) {
         channels[ws.channel].delete(ws);
       }
+      // Remove from broadcasters if it was the broadcaster
+      if (broadcasters[ws.channel] === ws) {
+        delete broadcasters[ws.channel];
+        console.log(`Broadcaster for channel ${ws.channel} disconnected`);
+      }
     }
   });
+}); // End wss.on('connection')
+
+// Heartbeat interval to detect dead connections
+const interval = setInterval(() => {
+  wss.clients.forEach((ws) => {
+    if (ws.isAlive === false) return ws.terminate();
+    ws.isAlive = false;
+    ws.ping(noop);
+  });
+}, HEARTBEAT_INTERVAL);
+
+wss.on('close', function close() {
+  clearInterval(interval);
 });
