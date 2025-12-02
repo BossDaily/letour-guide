@@ -10,6 +10,7 @@ export default function ListenAudio() {
   const wsRef = useRef<WebSocket | null>(null);
   const audioCtxRef = useRef<AudioContext | null>(null);
   const gainNodeRef = useRef<GainNode | null>(null);
+  const [int_numUsers, setNumUsers] = useState(0);
 
   //useEffect to set up websocket connection when channel changes
   useEffect(() => {
@@ -46,6 +47,19 @@ export default function ListenAudio() {
 
     ws.onmessage = (msg) => {
       try {
+        // If it's JSON text (control message)
+        if (typeof msg.data === "string") {
+          const parsed = JSON.parse(msg.data);
+
+          if (parsed.type === "num_users") {
+            setNumUsers(parsed.count);   // <-- UPDATE React state here
+            return;
+          }
+
+          // handle other string-control messages if needed
+          return;
+        }
+        
         // Binary messages are audio frames: 4 bytes sampleRate (Uint32 LE) + Float32 samples
         if (msg.data instanceof ArrayBuffer) {
           const buf = msg.data;
@@ -136,6 +150,12 @@ export default function ListenAudio() {
           <option className="text-base font-bold text-gray-600" value="9">nine</option>
           <option className="text-base font-bold text-gray-600" value="10">ten</option>
         </select>
+      </div>
+      
+      <div className="text-center">
+        <h1 className="mt-1 text-3xl font-bold text-gray-200">
+          Connected users: {int_numUsers}
+        </h1>
       </div>
     </div>
   );
