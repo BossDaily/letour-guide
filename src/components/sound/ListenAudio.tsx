@@ -55,21 +55,21 @@ export default function ListenAudio() {
     };
 
     ws.onmessage = (msg) => {
-      try {
-        const { type, data, sampleRate } = JSON.parse(msg.data);
-        if (type === "audio" && Array.isArray(data)) {
-          // 1. Dispatch event saying audio is playing
+      // 1. Handle Binary Audio (ArrayBuffer) FIRST
+      if (msg.data instanceof ArrayBuffer) {
+        try {
+          // Dispatch event saying audio is playing (for UI animations)
           window.dispatchEvent(
             new CustomEvent("audio:playing-change", {
               detail: { playing: true },
             })
           );
 
-          // 2. Reset the "silence" timer
+          // Reset the "silence" timer
           if (playingTimeoutRef.current)
             clearTimeout(playingTimeoutRef.current);
 
-          // 3. If no new audio arrives for 500ms, consider it stopped
+          // If no new audio arrives for 500ms, consider it stopped
           playingTimeoutRef.current = setTimeout(() => {
             window.dispatchEvent(
               new CustomEvent("audio:playing-change", {
@@ -77,10 +77,7 @@ export default function ListenAudio() {
               })
             );
           }, 500);
-        }
 
-        // Binary messages are audio frames: 4 bytes sampleRate (Uint32 LE) + Float32 samples
-        if (msg.data instanceof ArrayBuffer) {
           const buf = msg.data;
           const view = new DataView(buf);
           const sampleRate = view.getUint32(0, true);
@@ -118,12 +115,40 @@ export default function ListenAudio() {
             source.connect(gainNode);
             source.start();
           }
-          return;
+        } catch (error) {
+          console.error("Error processing binary audio:", error);
+        }
+        return;
+      }
+
+      // 2. Handle Text Messages (JSON)
+      try {
+        const { type, data, sampleRate } = JSON.parse(msg.data);
+        if (type === "audio" && Array.isArray(data)) {
+          // 1. Dispatch event saying audio is playing
+          window.dispatchEvent(
+            new CustomEvent("audio:playing-change", {
+              detail: { playing: true },
+            })
+          );
+
+          // 2. Reset the "silence" timer
+          if (playingTimeoutRef.current)
+            clearTimeout(playingTimeoutRef.current);
+
+          // 3. If no new audio arrives for 500ms, consider it stopped
+          playingTimeoutRef.current = setTimeout(() => {
+            window.dispatchEvent(
+              new CustomEvent("audio:playing-change", {
+                detail: { playing: false },
+              })
+            );
+          }, 500);
         }
 
         // Text messages are control messages (join/lock state)
         if (typeof msg.data === "string") {
-          const parsed = JSON.parse(msg.data);
+          // const parsed = JSON.parse(msg.data); // Already parsed above
           // if needed in future, we can handle more control messages here
           return;
         }
