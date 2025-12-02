@@ -3,7 +3,10 @@ import React, { useEffect, useRef, useState } from "react";
 // This is the base url of the page
 const BASE_URL = import.meta.env.BASE_URL || "/";
 // This is the url of the broadcast server
-const WS_URL = `${location.origin}${BASE_URL.replace('client', 'server')}api/server`; // Update if your server runs elsewhere
+const WS_URL = `${location.origin}${BASE_URL.replace(
+  "client",
+  "server"
+)}api/server`; // Update if your server runs elsewhere
 
 export default function ListenAudio() {
   const [channel, setChannel] = useState("1");
@@ -20,7 +23,8 @@ export default function ListenAudio() {
       wsRef.current.close();
     }
     if (!audioCtxRef.current) {
-      audioCtxRef.current = new (window.AudioContext || (window as any).webkitAudioContext)();
+      audioCtxRef.current = new (window.AudioContext ||
+        (window as any).webkitAudioContext)();
       // Create a gain node for volume control
       gainNodeRef.current = audioCtxRef.current.createGain();
       gainNodeRef.current.gain.value = 1; // Ensure unmuted on init
@@ -28,18 +32,22 @@ export default function ListenAudio() {
     }
     const ws = new WebSocket(WS_URL);
     // ensure binary messages arrive as ArrayBuffer for easy decoding
-    ws.binaryType = 'arraybuffer';
+    ws.binaryType = "arraybuffer";
     wsRef.current = ws;
 
     ws.onopen = () => {
       // tell server we are a listener for this channel
-      ws.send(JSON.stringify({ type: "join", channel, role: 'listener' }));
+      ws.send(JSON.stringify({ type: "join", channel, role: "listener" }));
       // start a lightweight application-level heartbeat so server can detect and close
       // truly inactive pages. Heartbeat interval only for listeners.
       const HEARTBEAT_MS = 10000; // send heartbeat every 10s
       const hb = setInterval(() => {
         if (ws.readyState === WebSocket.OPEN) {
-          try { ws.send(JSON.stringify({ type: 'heartbeat' })); } catch (e) { /* ignore */ }
+          try {
+            ws.send(JSON.stringify({ type: "heartbeat" }));
+          } catch (e) {
+            /* ignore */
+          }
         }
       }, HEARTBEAT_MS);
       // store on websocket so it can be cleared on disconnect
@@ -50,17 +58,27 @@ export default function ListenAudio() {
       try {
         const { type, data, sampleRate } = JSON.parse(msg.data);
         if (type === "audio" && Array.isArray(data)) {
-          
           // 1. Dispatch event saying audio is playing
-          window.dispatchEvent(new CustomEvent("audio:playing-change", { detail: { playing: true } }));
+          window.dispatchEvent(
+            new CustomEvent("audio:playing-change", {
+              detail: { playing: true },
+            })
+          );
 
           // 2. Reset the "silence" timer
-          if (playingTimeoutRef.current) clearTimeout(playingTimeoutRef.current);
-          
+          if (playingTimeoutRef.current)
+            clearTimeout(playingTimeoutRef.current);
+
           // 3. If no new audio arrives for 500ms, consider it stopped
           playingTimeoutRef.current = setTimeout(() => {
-             window.dispatchEvent(new CustomEvent("audio:playing-change", { detail: { playing: false } }));
+            window.dispatchEvent(
+              new CustomEvent("audio:playing-change", {
+                detail: { playing: false },
+              })
+            );
           }, 500);
+        }
+
         // Binary messages are audio frames: 4 bytes sampleRate (Uint32 LE) + Float32 samples
         if (msg.data instanceof ArrayBuffer) {
           const buf = msg.data;
@@ -76,12 +94,16 @@ export default function ListenAudio() {
             // Resample using OfflineAudioContext
             const tmpBuffer = ctx.createBuffer(1, samples.length, sampleRate);
             tmpBuffer.getChannelData(0).set(samples);
-            const offline = new OfflineAudioContext(1, Math.ceil(samples.length * ctx.sampleRate / sampleRate), ctx.sampleRate);
+            const offline = new OfflineAudioContext(
+              1,
+              Math.ceil((samples.length * ctx.sampleRate) / sampleRate),
+              ctx.sampleRate
+            );
             const source = offline.createBufferSource();
             source.buffer = tmpBuffer;
             source.connect(offline.destination);
             source.start();
-            offline.startRendering().then(rendered => {
+            offline.startRendering().then((rendered) => {
               const playSource = ctx.createBufferSource();
               playSource.buffer = rendered;
               playSource.connect(gainNode);
@@ -100,14 +122,14 @@ export default function ListenAudio() {
         }
 
         // Text messages are control messages (join/lock state)
-        if (typeof msg.data === 'string') {
+        if (typeof msg.data === "string") {
           const parsed = JSON.parse(msg.data);
           // if needed in future, we can handle more control messages here
           return;
         }
 
         // Unknown message format
-        console.warn('Unknown WebSocket message format', msg.data);
+        console.warn("Unknown WebSocket message format", msg.data);
       } catch (error) {
         console.error("Error processing audio data:", error);
       }
@@ -115,7 +137,9 @@ export default function ListenAudio() {
 
     return () => {
       // clear heartbeat interval if present and close
-      try { clearInterval((ws as any)._heartbeatInterval); } catch (e) {}
+      try {
+        clearInterval((ws as any)._heartbeatInterval);
+      } catch (e) {}
       ws.close();
       // Cleanup timeout
       if (playingTimeoutRef.current) clearTimeout(playingTimeoutRef.current);
@@ -134,24 +158,49 @@ export default function ListenAudio() {
   return (
     <div>
       <div className="mb-4">
-        <label htmlFor="channel" className="text-3xl font-bold text-gray-200 mb-6">Listen to: </label>
+        <label
+          htmlFor="channel"
+          className="text-3xl font-bold text-gray-200 mb-6"
+        >
+          Listen to:{" "}
+        </label>
         <select
           id="channel"
           name="channel"
           className="text-3xl font-bold text-gray-200 mb-6"
           value={channel}
-          onChange={e => setChannel(e.target.value)}
+          onChange={(e) => setChannel(e.target.value)}
         >
-          <option className="text-base font-bold text-gray-600" value="1">one</option>
-          <option className="text-base font-bold text-gray-600" value="2">two</option>
-          <option className="text-base font-bold text-gray-600" value="3">three</option>
-          <option className="text-base font-bold text-gray-600" value="4">four</option>
-          <option className="text-base font-bold text-gray-600" value="5">five</option> 
-          <option className="text-base font-bold text-gray-600" value="6">six</option>
-          <option className="text-base font-bold text-gray-600" value="7">seven</option>
-          <option className="text-base font-bold text-gray-600" value="8">eight</option>
-          <option className="text-base font-bold text-gray-600" value="9">nine</option>
-          <option className="text-base font-bold text-gray-600" value="10">ten</option>
+          <option className="text-base font-bold text-gray-600" value="1">
+            one
+          </option>
+          <option className="text-base font-bold text-gray-600" value="2">
+            two
+          </option>
+          <option className="text-base font-bold text-gray-600" value="3">
+            three
+          </option>
+          <option className="text-base font-bold text-gray-600" value="4">
+            four
+          </option>
+          <option className="text-base font-bold text-gray-600" value="5">
+            five
+          </option>
+          <option className="text-base font-bold text-gray-600" value="6">
+            six
+          </option>
+          <option className="text-base font-bold text-gray-600" value="7">
+            seven
+          </option>
+          <option className="text-base font-bold text-gray-600" value="8">
+            eight
+          </option>
+          <option className="text-base font-bold text-gray-600" value="9">
+            nine
+          </option>
+          <option className="text-base font-bold text-gray-600" value="10">
+            ten
+          </option>
         </select>
       </div>
     </div>
