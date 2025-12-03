@@ -93,7 +93,13 @@ export const GET = (ctx) => {
         channels[socket.channel].forEach(client => {
           if (client !== socket && client.readyState === WebSocket.OPEN) {
             try {
-              client.send(event.data);
+              //Before sending audio, send number of users to listening page:
+              client.send(JSON.stringify({
+                type: "num_users",
+                count: channels[socket.channel].size
+              }));
+              //Then, send the audio frame:
+              client.send(event.data);    //Where audio is sent.
             } catch (e) {
               // ignore send errors per-client
             }

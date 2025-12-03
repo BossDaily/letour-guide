@@ -13,6 +13,7 @@ export default function ListenAudio() {
   const wsRef = useRef<WebSocket | null>(null);
   const audioCtxRef = useRef<AudioContext | null>(null);
   const gainNodeRef = useRef<GainNode | null>(null);
+  const [int_numUsers, setNumUsers] = useState(0);
   // Add a ref to track the silence timeout
   const playingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
@@ -55,6 +56,19 @@ export default function ListenAudio() {
     };
 
     ws.onmessage = (msg) => {
+      // If it's JSON text (control message)
+        if (typeof msg.data === "string") {
+          const parsed = JSON.parse(msg.data);
+
+          if (parsed.type === "num_users") {
+            setNumUsers(parsed.count);   // <-- UPDATE React state here
+            return;
+          }
+
+          // handle other string-control messages if needed
+          return;
+        }
+      
       // 1. Handle Binary Audio (ArrayBuffer) FIRST
       if (msg.data instanceof ArrayBuffer) {
         try {
@@ -227,6 +241,12 @@ export default function ListenAudio() {
             ten
           </option>
         </select>
+      </div>
+      
+      <div className="text-center">
+        <h1 className="mt-1 text-3xl font-bold text-gray-200">
+          Connected users: {int_numUsers}
+        </h1>
       </div>
     </div>
   );
